@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_PitchShiftEffect">
+                <Parameters Algorithm="Normal" PitchShiftRatio="0.70000" />
+        </Effect>
+</xmlDoc>

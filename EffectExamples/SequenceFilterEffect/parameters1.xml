@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_SequenceFilterEffect">
+                <Parameters FilterQ="3.000000" MaxFrequency="1000.000000hz" MinFrequency="120.000000hz" ChangeFrequency="6.000000hz" />
+        </Effect>
+</xmlDoc>

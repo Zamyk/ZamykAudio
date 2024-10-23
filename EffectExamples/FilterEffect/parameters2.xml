@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="2" EffectID="ZA_FilterEffect">
+                <Parameters Gain="0.000000dB" Q="0.707" Frequency="200hz" Type="HighPass" />
+        </Effect>
+</xmlDoc>

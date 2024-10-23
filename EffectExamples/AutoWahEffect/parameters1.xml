@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_AutoWahEffect">
+                <Parameters MaxFrequency="2000.000000hz" MinFrequency="200.000000hz" FilterFactor_Q="2.000000" Decay="0.100000s" HighEnvelope="-18.000000dB" LowEnvelope="-35.000000dB" />
+        </Effect>
+</xmlDoc>

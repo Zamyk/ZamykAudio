@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_ReverseDelayEffect">
+                <Parameters Feedback="-92.000000dB" Wet="-3.000000dB" Dry="-3.000000dB" DelayTime="5.000000s" />
+        </Effect>
+</xmlDoc>

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_VibratoEffect">
+                <Parameters Depth="0.500000" MaxDelay="0.007000s" MinDelay="0.000000s" Rate="2.000000hz" />
+        </Effect>
+</xmlDoc>

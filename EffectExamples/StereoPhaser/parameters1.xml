@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_StereoPhaserEffect">
+                <Parameters Dry="-3.000000dB" Wet="-3.000000dB" Depth="0.5000000" Rate="0.700000hz" />
+        </Effect>
+</xmlDoc>

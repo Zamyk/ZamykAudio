@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_TremoloEffect">
+                <Parameters MaxGain="0.000000dB" MinGain="-3.000000dB" Frequency="8.000000hz" />
+        </Effect>
+</xmlDoc>

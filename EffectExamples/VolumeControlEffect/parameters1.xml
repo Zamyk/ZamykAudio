@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="2" EffectID="ZA_VolumeControlEffect">
+                <Parameters VolumeChange="-12.000000dB" />
+                <Parameters MaxChangePerSecond="30.000000dB" />
+        </Effect>
+</xmlDoc>

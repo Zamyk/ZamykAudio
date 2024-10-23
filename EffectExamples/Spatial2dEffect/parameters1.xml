@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_Spatial2dEffect">
+                <Parameters SoundAngle="1.5" LowPassFrequency="300.000000hz" MaxFilteredPart="-6.0dB" MinEarGain="-1.000000dB" MaxEarDelay="0.000600s" />
+        </Effect>
+</xmlDoc>

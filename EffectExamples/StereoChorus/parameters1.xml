@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="2" EffectID="ZA_StereoChorusEffect">
+                <Parameters MaxDelay="0.007000s" MinDelay="0.003000s" Rate="2.000000hz" />
+        </Effect>
+</xmlDoc>

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_DynamicsProcessorEffect">
+                <Parameters Type="Compressor" HardStop="false" Threshold="-30.000000dB" ReleaseTime="0.010000s" Ratio="6.000000" AttackTime="0.010000s" OutputGain="15.000000dB" />
+        </Effect>
+</xmlDoc>

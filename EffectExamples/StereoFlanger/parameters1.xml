@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="2" EffectID="ZA_StereoFlangerEffect">
+                <Parameters Feedback="-3.000000dB" MaxDelay="0.007000s" MinDelay="0.000000s" Rate="0.7000000hz" />
+        </Effect>
+</xmlDoc>

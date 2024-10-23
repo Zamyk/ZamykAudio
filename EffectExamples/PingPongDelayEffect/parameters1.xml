@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_PingPongDelayEffect">
+                <Parameters Feedback="-3.000000dB" Wet="-3.000000dB" Dry="-3.000000dB" RightDelayTime="0.300000s" ReservedDealyTime="0.500000s" LeftDelayTime="0.500000s" />
+        </Effect>
+</xmlDoc>

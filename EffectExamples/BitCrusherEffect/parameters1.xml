@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+	<Effect Version="1" EffectID="ZA_BitCrusherEffect">
+		<Parameters Dry="-3.000000dB" Wet="-3.000000dB" BitDepth="6.000000" />
+	</Effect>
+</xmlDoc>

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_ParallelEffect">
+                <Parameters NumberOfEffects="5">                        
+                        <effect0 Version="1" EffectID="ZA_PitchShiftEffect">
+                          <Parameters Algorithm="Normal" PitchShiftRatio="0.80000" />
+                        </effect0>
+                        <effect1 Version="1" EffectID="ZA_PitchShiftEffect">
+                          <Parameters Algorithm="Normal" PitchShiftRatio="1.30000" />
+                        </effect1>
+                        <effect2 Version="1" EffectID="ZA_PitchShiftEffect">
+                          <Parameters Algorithm="Normal" PitchShiftRatio="1.60000" />
+                        </effect2>
+                        <effect3 Version="1" EffectID="ZA_PitchShiftEffect">
+                          <Parameters Algorithm="Normal" PitchShiftRatio="0.6000" />
+                        </effect3>
+                        <effect4 Version="1" EffectID="ZA_PitchShiftEffect">
+                          <Parameters Algorithm="Normal" PitchShiftRatio="1." />
+                        </effect4>
+                </Parameters>
+        </Effect>
+</xmlDoc>

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_DelayEffect">
+                <Parameters Feedback="-5.000000dB" Wet="-5.010300dB" Dry="0dB" ReservedDelayTime="2.000000s" DelayTime="0.3s" />
+        </Effect>
+</xmlDoc>

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_DuckDelayEffect">
+                <Parameters ReleaseTime="0.050000s" AttackTime="0.050000s" RecoveryTime="1.0000s" Threshold="-23.000000dB" WetMax="-3.000000dB" Feedback="-1.000000dB" Dry="0.000000dB" WetMin="-12.000000dB" ReservedDelayTime="2.000000s" DelayTime="0.300000s" />
+        </Effect>
+</xmlDoc>

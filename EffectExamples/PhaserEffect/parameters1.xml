@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_PhaserEffect">
+                <Parameters Dry="-3.000000dB" Wet="-3.000000dB" Depth="1.000000" Rate="0.400000hz" />
+        </Effect>
+</xmlDoc>

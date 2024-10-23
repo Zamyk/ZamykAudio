@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="3" EffectID="ZA_RobotEffect">
+                <Parameters HopRatio="0.25000" FrameSizeTwoPow="9" />
+        </Effect>
+</xmlDoc>

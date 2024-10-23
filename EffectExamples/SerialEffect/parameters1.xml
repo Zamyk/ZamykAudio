@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_SerialEffect">
+                <Parameters NumberOfEffects="2">
+                        <effect0 Version="2" EffectID="ZA_FlangerEffect">
+                                <Parameters Feedback="-3.000000dB" MaxDelay="0.007000s" MinDelay="0.000000s" Rate="0.400000hz" />
+                        </effect0>
+                        <effect1 Version="1" EffectID="ZA_DelayEffect">
+                                <Parameters Feedback="-5.000000dB" Wet="-5.010300dB" Dry="0dB" ReservedDelayTime="2.000000s" DelayTime="0.5s" />
+                        </effect1>
+                </Parameters>
+        </Effect>
+</xmlDoc>

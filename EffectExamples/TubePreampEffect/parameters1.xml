@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_TubePreampEffect">
+                <Parameters High="3.000000dB" Low="-1.000000dB" FrequencyRangeMax="1000.000000hz" FrequencyRangeMin="100.000000hz" OutputGain="-6.000000dB" InputGain="6.000000dB" />
+        </Effect>
+</xmlDoc>

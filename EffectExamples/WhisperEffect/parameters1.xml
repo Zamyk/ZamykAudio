@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="3" EffectID="ZA_WhisperEffect">
+                <Parameters HopRatio="0.100000" FrameSizeTwoPow="7" />
+        </Effect>
+</xmlDoc>

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<xmlDoc>
+        <Effect Version="1" EffectID="ZA_LfoWahEffect">
+                <Parameters MaxFrequency="2000.000000hz" MinFrequency="350.000000hz" Rate="2.000000hz" />
+        </Effect>
+</xmlDoc>
