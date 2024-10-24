@@ -2985,8 +2985,8 @@ Remember to use add_definitions(-DZAUDIO_USE_FFT), when using fft dependent effe
 
 
 ### ZamykAudio
-ZamykAudio can be build just by adding cmake subdirectory and using add_library. If not using cmake just build all .cpp files and all dependencies. 
-For cmake it requires external subdirectory which has to contain pugixml and may contain fftw3 if used.
+ZamykAudio can be build just by adding cmake subdirectory and using add_library. If not using cmake just build all .cpp files and build needed dependencies. 
+When using cmake place required dependencies into their places.
 
 ### fftw3 (optional)
 add fftw3 files to external/fftw3
