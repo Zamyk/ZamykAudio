@@ -1,2 +1,4 @@
 1. Potential delay problem with SDL_IO input, because of not emptying buffer
 2. Passing parameters to engine in batches instead of always
+3. Improve building section in doc
+4. Split SDL_IO.h to .cpp
