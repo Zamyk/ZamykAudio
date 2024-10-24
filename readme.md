@@ -8,4 +8,5 @@ Main library is located in ZamykAudio directory.
 For detailed documentation, please refer to the doc.md file.
 
 # Examples
-There are few examples present in the examples/ directory and in CmdPlayer directory.
+There are few usage examples present in the examples and CmdPlayer directories.
+Examples of sound effects (input and output .wav files) can be found in EffectExamples directory.
