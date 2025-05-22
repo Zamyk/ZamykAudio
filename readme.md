@@ -11,7 +11,7 @@ For detailed documentation, please refer to the doc.md file.
 
 There are few examples present in the examples/ directory. \
 There are examples of effects and their results in the EffectExamples directory. \
-There is small cli audio player example in CmdPlayer directory.
+There is small CLI audio player example in CmdPlayer directory.
 
 ## Building
 
