@@ -1,0 +1,12 @@
+[submodule "PortAudioIO/portaudio"]
+	path = PortAudioIO/portaudio
+	url = https://github.com/PortAudio/portaudio
+[submodule "ZAudio_SDL_IO/SDL"]
+	path = ZAudio_SDL_IO/SDL
+	url = https://github.com/libsdl-org/SDL
+[submodule "external/pugixml"]
+	path = external/pugixml
+	url = https://github.com/zeux/pugixml.git
+[submodule "ZAudio_FileIO/dr_libs"]
+	path = ZAudio_FileIO/dr_libs
+	url = https://github.com/mackron/dr_libs
