@@ -347,16 +347,27 @@ void effectPlayback() {
       }
     }
   );
+  cache.addLoadingFunction(".ogg",
+    [](const std::filesystem::path& path) -> ResultValue<std::unique_ptr<AudioDecoder>> {
+      auto ans = VorbisDecoder::load(path);
+      if(ans) {
+        return static_cast<std::unique_ptr<AudioDecoder>>(std::move(ans.get()));
+      }
+      else {
+        return Result::error(ans.getDescription());
+      }
+    }
+  );
   cache.addLoadingFunction(".mp3", Mp3Decoder::load);
 
-  auto soundID = cache.add("sound.mp3");
+  auto soundID = cache.add("sound.ogg");
 
   if(!soundID) {
     std::cout << cache.getError();
     return;
   }
 
-  auto cacheInput = cache.getSound(*soundID);
+  auto cacheInput = cache.getSound(*soundID, true, true);
   if(!cacheInput) {
     std::cout << cache.getError();
     return;
@@ -390,6 +401,6 @@ void effectPlayback() {
 }
 
 int main() {
-  filePlayback();
+  effectPlayback();
   return 0;
 }

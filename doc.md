@@ -357,9 +357,9 @@ To read flac file FlacDecoder can be used. It provides all AudioDecoder methods.
 - tutorial about adding loops in audacity and more https://wohlsoft.ru/pgewiki/How_To:_Looping_music_files 
 
 ```cpp
-static FlacDecoder::CreationResult FlacDecoder::load(const std::filesystem::path& path, bool loadLoops  = false);
-static FlacDecoder::CreationResult FlacDecoder::loadFromCallback(const FileInputCallbacks& callbacks, bool loadLoops = false);
-// CreationResult inherits from ResultValue<std::unique_ptr<AudioDecoder>> and adds additional bool loadedLoops() method
+static FlacDecoder::LoadResult FlacDecoder::load(const std::filesystem::path& path, bool loadLoops  = false);
+static FlacDecoder::LoadResult FlacDecoder::loadFromCallback(const FileInputCallbacks& callbacks, bool loadLoops = false);
+// LoadResult inherits from ResultValue<std::unique_ptr<AudioDecoder>> and adds additional bool loadedLoops() method
 
 ```
 ---
@@ -3429,6 +3429,13 @@ to bool: false
 
 
 ## Dependencies
+
+
+### stb_vorbis
+decode ogg vorbis files from file/memory to float/16-bit signed output
+https://github.com/nothings/stb/blob/master/stb_vorbis.c
+
+used in FileIO, build from source, placed in ZAudio_FileIO folder
 
 ### dr_libs
 Public domain, single file audio decoding libraries for C and C++.

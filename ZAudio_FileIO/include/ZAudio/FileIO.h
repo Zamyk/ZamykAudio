@@ -14,6 +14,8 @@
 #include <dr_mp3.h>
 #include <dr_wav.h>
 
+struct stb_vorbis; // forward
+
 namespace ZAudio {
 
 
@@ -81,16 +83,16 @@ struct FlacFileInput {
 
   FlacFileInput(std::unique_ptr<FileInputStream> input_p) : input(std::move(input_p)) {}
 };
-class CreationResult : public ResultValue<std::unique_ptr<FlacDecoder>> {
+class LoadResult : public ResultValue<std::unique_ptr<FlacDecoder>> {
 public:
-  CreationResult(ResultValue<std::unique_ptr<FlacDecoder>>&& result, bool loopsLoaded_p);
+  LoadResult(ResultValue<std::unique_ptr<FlacDecoder>>&& result, bool loopsLoaded_p);
   bool loadedLoops() const;
 private:
   bool loadedLoopsV = false;
 };
 
-  static CreationResult load(const std::filesystem::path& path, bool loadLoops = false);
-  static CreationResult loadFromStream(std::unique_ptr<FileInputStream> fileInput, bool loadLoops = false);
+  static LoadResult load(const std::filesystem::path& path, bool loadLoops = false);
+  static LoadResult loadFromStream(std::unique_ptr<FileInputStream> fileInput, bool loadLoops = false);
 
   FlacDecoder(std::unique_ptr<FileInputStream> fileInput, bool& loadLoops, Result& result);
   ~FlacDecoder();
@@ -156,6 +158,54 @@ private:
   FrameFormat format;
   bool error = false;
 };
+
+
+
+class VorbisDecoder : public AudioDecoder {
+public:
+class LoadResult : public ResultValue<std::unique_ptr<VorbisDecoder>> {
+public:
+  LoadResult(ResultValue<std::unique_ptr<VorbisDecoder>>&& result, bool loopsLoaded_p);
+  bool loadedLoops() const;
+private:
+  bool loadedLoopsV = false;
+};
+
+  static LoadResult load(const std::filesystem::path& path, bool loadLoops = false);
+  static LoadResult loadFromStream(std::unique_ptr<FileInputStream> fileInput, bool loadLoops = false);
+
+  VorbisDecoder(std::unique_ptr<FileInputStream> fileInput, bool& loadLoops, Result& result);
+  ~VorbisDecoder();
+
+  // move only
+  VorbisDecoder(const VorbisDecoder& oth) = delete;
+  VorbisDecoder(VorbisDecoder&& oth) = default;
+  VorbisDecoder& operator= (const VorbisDecoder& oth) = delete;
+  VorbisDecoder& operator= (VorbisDecoder&& oth) = default;
+
+  bool get(std::span<sample_t> out) override;
+  void seek(uint64_t position) override;
+  void setLooped(bool looped_p) override;
+
+  uint64_t getLength() override;
+  Frequency getSampleRate() override;
+  uint64_t getPosition() override;
+  uint64_t getLoopStart() override;
+  uint64_t getLoopEnd() override;
+
+  bool errorOccured() const override;
+  FrameFormat getFormat() const override;
+private:
+  bool looped = false;
+  std::unique_ptr<FileInputStream> fileInput;
+  std::vector<uint8_t> data;
+  stb_vorbis* vorbis = nullptr;
+  FrameFormat format;
+  bool error = false;
+  uint32_t loopStart = 0;
+  uint32_t loopEnd = 0;
+};
+
 
 class WavEncoder : public AudioEncoder {
 public:

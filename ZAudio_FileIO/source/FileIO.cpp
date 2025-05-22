@@ -2,11 +2,13 @@
 #define DR_WAV_IMPLEMENTATION
 #define DR_MP3_IMPLEMENTATION
 
+#include <iostream>
 #include <dr_flac.h>
 #include <dr_mp3.h>
 #include <dr_wav.h>
-
 #include <ZAudio/FileIO.h>
+
+#include "stb_vorbis.c"
 
 namespace ZAudio {
 
@@ -28,7 +30,7 @@ static drwav_bool32 drMp3Onseek(void* pUserData, int offset, drmp3_seek_origin o
 }
 
 static drwav_bool32 drMp3OnTell(void* pUserData, drmp3_int64* pCursor) {
-  FileInputStream* input = static_cast<FileInputStream*>(pUserData);  
+  FileInputStream* input = static_cast<FileInputStream*>(pUserData);
   if(auto ans = input->tell()) {
     *pCursor = *ans;
     return true;
@@ -164,6 +166,32 @@ private:
   FILE* file = nullptr;
 };
 
+
+struct MetadataLoopInfo {
+enum struct Type {
+  None, LoopStart, LoopEnd
+};
+  Type type;
+  int64_t value = 0;
+
+  static MetadataLoopInfo parse(const std::string& str) {
+    auto i = str.find('=');
+    if(i != std::string::npos) {
+      std::string s1 = str.substr(0, i);
+      std::string s2 = str.substr(i + 1);
+      if(s1 == "LOOPSTART") {
+        auto value = parse_time(s2);
+        return MetadataLoopInfo{Type::LoopStart, value};
+      }
+      else if(s1 == "LOOPEND") {
+        auto value = parse_time(s2);
+        return MetadataLoopInfo{Type::LoopEnd, value};
+      }
+    }
+    return MetadataLoopInfo{Type::None, 0};
+  }
+};
+
 static void drFlacOnMeta(void* pUserData, drflac_metadata* pMetadata) {
   FlacDecoder::FlacFileInput* flacInput = static_cast<FlacDecoder::FlacFileInput*>(pUserData);
   if(pMetadata->type == DRFLAC_METADATA_BLOCK_TYPE_VORBIS_COMMENT) {
@@ -173,17 +201,13 @@ static void drFlacOnMeta(void* pUserData, drflac_metadata* pMetadata) {
     drwav_uint32 length = 0;
     const char* cstr = drflac_next_vorbis_comment(&it, &length);
     while(cstr) {
-      std::string str(cstr, length);      
-      auto i = str.find('=');
-      if(i != std::string::npos) {
-        std::string s1 = str.substr(0, i);
-        std::string s2 = str.substr(i + 1);
-        if(s1 == "LOOPSTART") {
-          flacInput->loopStart = parse_time(s2);
-        }
-        else if(s1 == "LOOPEND") {
-          flacInput->loopEnd = parse_time(s2);
-        }
+      std::string str(cstr, length);
+      auto l = MetadataLoopInfo::parse(str);
+      if(l.type == MetadataLoopInfo::Type::LoopStart) {
+        flacInput->loopStart = l.value;
+      }
+      else if(l.type == MetadataLoopInfo::Type::LoopStart) {
+        flacInput->loopEnd = l.value;
       }
       cstr = drflac_next_vorbis_comment(&it, &length);
     }
@@ -293,29 +317,29 @@ FrameFormat WavDecoder::getFormat() const {
 
 // FlacDecoder---------------------------------------------------------------------------------------------------
 
-FlacDecoder::CreationResult::CreationResult(ResultValue<std::unique_ptr<FlacDecoder>>&& result, bool loopsLoaded_p) :
+FlacDecoder::LoadResult::LoadResult(ResultValue<std::unique_ptr<FlacDecoder>>&& result, bool loopsLoaded_p) :
   ResultValue<std::unique_ptr<FlacDecoder>>(std::move(result)),
   loadedLoopsV(loopsLoaded_p) {}
 
-bool FlacDecoder::CreationResult::loadedLoops() const {
+bool FlacDecoder::LoadResult::loadedLoops() const {
   return loadedLoopsV;
 }
 
-FlacDecoder::CreationResult FlacDecoder::load(const std::filesystem::path& path, bool loadLoops) {
+FlacDecoder::LoadResult FlacDecoder::load(const std::filesystem::path& path, bool loadLoops) {
   auto in = std::make_unique<FileInputStreamStd>();
   if(!in->open(path)) {
-    return CreationResult(Result::error("Couldn't open file" + path.string()), false);
+    return LoadResult(Result::error("Couldn't open file" + path.string()), false);
   }
   return loadFromStream(std::move(in), loadLoops);
 }
 
-FlacDecoder::CreationResult FlacDecoder::loadFromStream(std::unique_ptr<FileInputStream> fileInput, bool loadLoops) {
+FlacDecoder::LoadResult FlacDecoder::loadFromStream(std::unique_ptr<FileInputStream> fileInput, bool loadLoops) {
   Result res;
   auto ans = std::make_unique<FlacDecoder>(std::move(fileInput), loadLoops, res);
   if(!res) {
-    return CreationResult(res, false);
+    return LoadResult(res, false);
   }
-  return CreationResult(std::move(ans), loadLoops);
+  return LoadResult(std::move(ans), loadLoops);
 }
 
 FlacDecoder::FlacDecoder(std::unique_ptr<FileInputStream> fileInput_p, bool& loadLoops, Result& result) : fileInput(std::make_unique<FlacFileInput>(std::move(fileInput_p))) {
@@ -404,6 +428,163 @@ FrameFormat FlacDecoder::getFormat() const {
   return format;
 }
 
+
+// VorbisDecoder ---------------------------------------------------------------------------------------------------
+
+
+VorbisDecoder::LoadResult::LoadResult(ResultValue<std::unique_ptr<VorbisDecoder>>&& result, bool loopsLoaded_p) :
+  ResultValue<std::unique_ptr<VorbisDecoder>>(std::move(result)),
+  loadedLoopsV(loopsLoaded_p) {}
+
+bool VorbisDecoder::LoadResult::loadedLoops() const {
+  return loadedLoopsV;
+}
+
+VorbisDecoder::LoadResult VorbisDecoder::load(const std::filesystem::path& path, bool loadLoops) {
+  auto in = std::make_unique<FileInputStreamStd>();
+  if(!in->open(path)) {
+    return LoadResult(Result::error("Couldn't open file" + path.string()), false);
+  }
+  return loadFromStream(std::move(in), loadLoops);
+}
+
+VorbisDecoder::LoadResult VorbisDecoder::loadFromStream(std::unique_ptr<FileInputStream> fileInput, bool loadLoops) {
+  Result res;
+  auto ans = std::make_unique<VorbisDecoder>(std::move(fileInput), loadLoops, res);
+  if(!res) {
+    return LoadResult(res, false);
+  }
+  return LoadResult(std::move(ans), loadLoops);
+}
+
+VorbisDecoder::VorbisDecoder(std::unique_ptr<FileInputStream> fileInput_p, bool& loadLoops, Result& result) : fileInput(std::move(fileInput_p)) {
+  result = Result::success();
+
+  data.clear();
+  static constexpr size_t BufferSize = 1024;
+  std::vector<uint8_t> buffer(BufferSize);
+  while(true) {
+    size_t got = fileInput->read(buffer.data(), BufferSize);
+    data.insert(data.end(), buffer.begin(), buffer.begin() + got);
+    if(got < BufferSize) {
+      break;
+    }
+  }
+
+  int error = 0;
+  vorbis = stb_vorbis_open_memory(data.data(), data.size(), &error, nullptr);
+  if(error != 0) {
+    result = Result::error("stb error todo message");
+    return;
+  }
+
+  // loop info
+  {
+    auto comments = stb_vorbis_get_comment(vorbis);
+
+    loopStart = loopEnd = -1;
+
+    bool gotStart = false;
+    bool gotEnd = false;
+
+    for(int i = 0; i < comments.comment_list_length; i++) {
+      std::string str(comments.comment_list[i]);
+      auto l = MetadataLoopInfo::parse(str);
+      if(l.type == MetadataLoopInfo::Type::LoopStart) {
+        loopStart = l.value;
+        gotStart = true;
+      }
+      else if(l.type == MetadataLoopInfo::Type::LoopEnd) {
+        loopEnd = l.value;
+        gotEnd = true;
+      }
+    }
+
+    if(gotStart && gotEnd) {
+      loadLoops = true;      
+    }
+    else {
+      loadLoops = false;
+      loopStart = 0;
+      loopEnd = getLength();
+    }
+  }
+
+  if(vorbis->channels == 1) {
+    format = FrameFormat::Mono;
+  }
+  else if(vorbis->channels == 2) {
+    format = FrameFormat::Stereo;
+  }
+  else {
+    result = Result::error("as for now, only mono and stereo :(, number of channels: " + std::to_string(vorbis->channels));
+  }
+}
+
+VorbisDecoder::~VorbisDecoder() {
+  if(vorbis) {
+    free(vorbis);
+  }
+}
+
+bool VorbisDecoder::get(std::span<sample_t> out) {
+  std::array<float, Tools::MaxNumberOfChannels> frame;
+  if(looped && getPosition() >= loopEnd) {
+    seek(loopStart);
+  }
+  std::array<float*, Tools::MaxNumberOfChannels> buffer;
+  for(size_t i = 0; i < Tools::MaxNumberOfChannels; i++) {
+    buffer[i] = &frame[i];
+  }
+
+  if(stb_vorbis_get_samples_float(vorbis, vorbis->channels, buffer.data(), 1) == 0) {
+    return false;
+  }
+  std::copy(frame.cbegin(), frame.cend(), out.begin());
+  return true;
+}
+
+void VorbisDecoder::seek(uint64_t position) {
+  if(!stb_vorbis_seek(vorbis, position)) {
+    error = true;
+  }
+}
+
+void VorbisDecoder::setLooped(bool looped_p) {
+  looped = looped_p;
+}
+
+uint64_t VorbisDecoder::getLength() {
+  if(vorbis) {
+    stb_vorbis_stream_length_in_samples(vorbis);
+  }
+  else {
+    return 0;
+  }
+}
+
+uint64_t VorbisDecoder::getLoopStart() {
+  return loopStart;
+}
+uint64_t VorbisDecoder::getLoopEnd() {
+  return loopEnd;
+}
+
+Frequency VorbisDecoder::getSampleRate() {
+  return Frequency::Hz(vorbis->sample_rate);
+}
+
+uint64_t VorbisDecoder::getPosition() {
+  return stb_vorbis_get_sample_offset(vorbis);
+}
+
+bool VorbisDecoder::errorOccured() const {
+  return error;
+}
+
+FrameFormat VorbisDecoder::getFormat() const {
+  return format;
+}
 
 // Mp3Decoder -----------------------------------------------------------------------------------------------------------------------------------------
 

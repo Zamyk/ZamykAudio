@@ -62,7 +62,7 @@ std::unique_ptr<FileInput> SoundCache::getSound(CacheSoundID id, bool playing, b
   auto it2 = streamSounds.find(id);
 
   if(it1 != preBufferedSounds.end()) {    
-    return std::make_unique<FileInput>(std::make_unique<BufferDecoder>(it1->second), FileInput::Parameters(false, position, 1., false));
+    return std::make_unique<FileInput>(std::make_unique<BufferDecoder>(it1->second), FileInput::Parameters(looped, position, 1., false));
   }
   else if(it2 != streamSounds.end()) {
     auto dec = loadingFunctions[it2->second.extension().string()](it2->second);
