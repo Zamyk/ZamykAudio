@@ -15,10 +15,10 @@ public:
   SDL_Output(FrameFormat format_p, Frequency inSampleRate_p, SDL_AudioStream* stream_p, std::shared_ptr<std::atomic_bool> stopFlag_p, std::shared_ptr<std::atomic_bool> finishedFlag_p) :
     format(format_p),
     inSampleRate(inSampleRate_p),
+    buffer(128),
     stream(stream_p),
     stopFlag(stopFlag_p),
-    finishedFlag(finishedFlag_p),
-    buffer(128) {}    
+    finishedFlag(finishedFlag_p) {}    
 
   void send(std::span<const sample_t> in) override {
     finishedFlag->store(false);
@@ -37,9 +37,9 @@ public:
     for(size_t i = 0; i < Tools::numberOfChannels(format); i++) {
       auto v = in[i];
       buffer[curr++] = v;
-      if(curr == buffer.size()) {
+      if(curr == static_cast<int32_t>(buffer.size())) {
         curr = 0;
-        while(SDL_GetAudioStreamQueued(stream) > sampleFrames * (SDL_AUDIO_MASK_BITSIZE & spec.format) * spec.channels + buffer.size() * sizeof(float) && !stopFlag->load()) {
+        while(SDL_GetAudioStreamQueued(stream) > static_cast<int32_t>(sampleFrames * (SDL_AUDIO_MASK_BITSIZE & spec.format) * spec.channels + buffer.size() * sizeof(float)) && !stopFlag->load()) {
           std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         if(!SDL_PutAudioStreamData(stream, buffer.data(), buffer.size() * sizeof(float))) {
@@ -94,10 +94,10 @@ public:
   SDL_Input(FrameFormat format_p, Frequency inSampleRate_p, SDL_AudioStream* stream_p, std::shared_ptr<std::atomic_bool> stopFlag_p, std::shared_ptr<std::atomic_bool> finishedFlag_p) :
     format(format_p),
     inSampleRate(inSampleRate_p),
+    buffer(128),
     stream(stream_p),
     stopFlag(stopFlag_p),
-    finishedFlag(finishedFlag_p),
-    buffer(128) {}
+    finishedFlag(finishedFlag_p) {}
 
   void get(std::span<sample_t> out) override {
     finishedFlag->store(false);
@@ -122,7 +122,7 @@ public:
           }
 
           n += tmp;
-          if(n == buffer.size()) {
+          if(n == static_cast<int32_t>(buffer.size())) {
             break;
           }
 

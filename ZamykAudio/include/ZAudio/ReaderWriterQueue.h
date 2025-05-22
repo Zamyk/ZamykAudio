@@ -53,7 +53,7 @@ public:
     }
     T ans = std::move(buffer[readIndex]);
     readIndex = next(readIndex);
-    return std::move(ans);
+    return ans;
   }
 
 private:

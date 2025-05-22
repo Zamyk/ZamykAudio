@@ -266,7 +266,7 @@ struct FolderPlayer {
       }    
       if((player.ended() || skip) && (autoPlay || shuffle)) {
         playing++;
-        if(playing == files.size()) {
+        if(playing == static_cast<int>(files.size())) {
           playing = 0;
         }
         if(shuffle) {

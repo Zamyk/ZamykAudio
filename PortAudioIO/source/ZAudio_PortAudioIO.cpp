@@ -17,7 +17,7 @@ Result PortAudioIO::init() {
   auto deviceCount = Pa_GetDeviceCount();
   devices.resize(deviceCount);
 
-  for(size_t i = 0; i < deviceCount; i++) {    
+  for(int32_t i = 0; i < deviceCount; i++) {    
     auto info = Pa_GetDeviceInfo(i);
     if(!info) {
       return Result::error("error getting device info");      
@@ -31,7 +31,7 @@ Result PortAudioIO::init() {
 
   auto hostApiCount = Pa_GetHostApiCount();
   hostApis.resize(hostApiCount);
-  for(size_t i = 0; i < hostApiCount; i++) {    
+  for(int32_t i = 0; i < hostApiCount; i++) {    
     auto info = Pa_GetHostApiInfo(i);
     if(!info) {
       return Result::error("error getting host api info");      
@@ -95,8 +95,7 @@ static int inputOutputCallback( const void *inputBuffer, void *outputBuffer, uns
 }
 
 static int inputOnlyCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData ) {    
-  float* in = (float*)inputBuffer;
-  float* out = (float*)outputBuffer;
+  float* in = (float*)inputBuffer;  
   Tools::InputOutputCallbackData* data = (Tools::InputOutputCallbackData*) userData;
 
   data->input->inputCallback(std::span<const float>(in, in + framesPerBuffer * data->input->getNumberOfChannels()));  
@@ -104,8 +103,7 @@ static int inputOnlyCallback( const void *inputBuffer, void *outputBuffer, unsig
   return paContinue;  
 }
 
-static int outputOnlyCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData ) {    
-  float* in = (float*)inputBuffer;
+static int outputOnlyCallback( const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags statusFlags, void* userData ) {      
   float* out = (float*)outputBuffer;
   Tools::InputOutputCallbackData* data = (Tools::InputOutputCallbackData*) userData;
 

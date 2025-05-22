@@ -4,8 +4,13 @@ project(ZAudio VERSION 1.0 LANGUAGES CXX C)
 include(CTest)
 include(FetchContent)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -wall")
 
+if(ANDROID)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wall")
+elseif(UNIX)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wall")
+else()
+endif()
 
 
 option(ZAUDIO_USE_OWN_PUGIXML "Library will use fetched PugiXML; if OFF, assumes PugiXML is already in the project" ON)

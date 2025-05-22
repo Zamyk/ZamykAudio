@@ -40,7 +40,7 @@ void PhaseCorrector::operator() (std::vector<std::complex<double>>& bins) {
 }
 
 bool PhaseCorrector::isPeak(size_t position, const std::vector<std::complex<double>>& bins) {
-  for(int32_t i = std::max(0, static_cast<int32_t>(position) - 2); i <= std::min(position + 2, frameSize - 1); i++) {
+  for(int32_t i = std::max(0, static_cast<int32_t>(position) - 2); i <= std::min<int32_t>(position + 2, frameSize - 1); i++) {
     if(std::abs(bins[i]) > std::abs(bins[position])) {
       return false;
     }
@@ -113,9 +113,9 @@ void PhaseCorrector::phaseLockCorrect(std::vector<std::complex<double>>& bins) {
 
 void PhaseCorrector::phaseTrackCorrect(std::vector<std::complex<double>>& bins) {    
   findPeaks(bins);
-  int l = 0;
+  int32_t l = 0;
   for(auto peak : peaks) {            
-    while(l + 1 < prevPeaks.size() && Math::dist(peak.position, prevPeaks[l].position) > Math::dist(peak.position, prevPeaks[l + 1].position)) {
+    while(l + 1 < static_cast<int32_t>(prevPeaks.size()) && Math::dist(peak.position, prevPeaks[l].position) > Math::dist(peak.position, prevPeaks[l + 1].position)) {
       l++;
     }
     if(prevPeaks.size() && Math::dist(peak.position, prevPeaks[l].position) < 4) {
@@ -163,9 +163,9 @@ PhaseVocoder::PhaseVocoder(size_t frameSize_p, size_t inputHopSize_p, size_t out
   frameSize(frameSize_p),
   inputHopSize(inputHopSize_p),
   outputHopSize(outputHopSize_p),
-  fft(frameSize),
   inputFrame(frameSize),
   outputFrame(frameSize),
+  fft(frameSize),  
   window(frameSize, WindowFunction::Type::Hann),
   phaseCorrector(frameSize, inputHopSize, outputHopSize, phaseCorrectionAlgorithm_p) {}
   

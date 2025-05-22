@@ -59,7 +59,7 @@ void writerThread1(std::atomic_bool& start, const std::vector<int>& vals, Reader
   while(!start) {
     std::this_thread::yield();
   }
-  for(int i = 0; i < vals.size(); i++) {
+  for(size_t i = 0; i < vals.size(); i++) {
     queue.waitAndPush(vals[i]);
   }
 }
@@ -68,7 +68,7 @@ void readerThread1(std::atomic_bool& start, std::vector<int>& vals, int n, Reade
   while(!start) {
     std::this_thread::yield();
   }
-  while(vals.size() < n) {
+  while(static_cast<int>(vals.size()) < n) {
     if(auto tmp = queue.tryPop()) {
       vals.push_back(*tmp);
     }
@@ -100,7 +100,7 @@ void writerThread2(std::atomic_bool& start, const std::vector<int>& vals, Reader
     std::this_thread::yield();
   }
   int i = 0;
-  while(i < vals.size()) {
+  while(i < static_cast<int>(vals.size())) {
     bool succ = queue.tryPush(vals[i]);
     if(succ) {
       i++;
@@ -112,7 +112,7 @@ void readerThread2(std::atomic_bool& start, std::vector<int>& vals, int n, Reade
   while(!start) {
     std::this_thread::yield();
   }
-  while(vals.size() < n) {
+  while(static_cast<int>(vals.size()) < n) {
     if(auto tmp = queue.tryPop()) {
       vals.push_back(*tmp);
     }

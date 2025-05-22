@@ -28,7 +28,7 @@ public:
   }
 
   Iterator operator - (int32_t v) const {    
-    return Iterator(*buffer, (curr + v >= buffer->size() ? curr + v - buffer->size() : curr + v));
+    return Iterator(*buffer, (curr + v >= static_cast<int32_t>(buffer->size()) ? curr + v - buffer->size() : curr + v));
   }  
 
   Iterator& operator += (int32_t v) {    
@@ -64,12 +64,12 @@ public:
   }  
 
   T* operator->() const {
-    assert(curr >= 0 && curr < buffer->size());
+    assert(curr >= 0 && curr < static_cast<int32_t>(buffer->size()));
     return (*buffer)[curr];
   }  
 
   T& operator*() const {
-    assert(curr >= 0 && curr < buffer->size());
+    assert(curr >= 0 && curr < static_cast<int32_t>(buffer->size()));
     return (*buffer)[curr];
   }
 
