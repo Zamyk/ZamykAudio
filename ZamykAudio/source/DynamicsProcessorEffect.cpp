@@ -9,7 +9,7 @@ DynamicsProcessorEffect::DynamicsProcessorEffect(Parameters parameters_p) : para
 
 void DynamicsProcessorEffect::process(std::span<const sample_t> in, std::span<sample_t> out) {
   auto det = detector.process(in[0]);    
-  if(det > parameters.threshold && parameters.type == Type::Compressor || det < parameters.threshold && parameters.type == Type::Expander) {
+  if( (det > parameters.threshold && parameters.type == Type::Compressor) || (det < parameters.threshold && parameters.type == Type::Expander) ) {
     Volume gainChange = calculateGainChange(det);
     out[0] = in[0] * gainChange.linear() * parameters.outputGain.linear();            
   }

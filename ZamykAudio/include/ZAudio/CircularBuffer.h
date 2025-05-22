@@ -16,11 +16,11 @@ class Iterator {
 public:
   Iterator() = default;
   Iterator(std::vector<T>& buffer_p, int32_t curr_p) : buffer(&buffer_p), curr(curr_p) {
-    assert(buffer == nullptr || (curr >= 0 && curr < buffer->size()));
+    assert(buffer == nullptr || (curr >= 0 && curr < static_cast<int32_t>(buffer->size())));
   }
 
   bool valid() const {
-    return buffer != nullptr && buffer->size() > curr;
+    return buffer != nullptr && static_cast<int32_t>(buffer->size()) > curr;
   }
 
   Iterator operator + (int32_t v) const {
@@ -48,7 +48,7 @@ public:
   Iterator operator++(int) & {
     auto tmp = *this;
     ++(*this);
-    assert(curr >= 0 && curr < buffer->size());
+    assert(curr >= 0 && curr < static_cast<int32_t>(buffer->size()));
     return tmp;
   }
 
@@ -59,7 +59,7 @@ public:
   Iterator operator--(int) & {
     auto tmp = *this;
     --(*this);
-    assert(curr >= 0 && curr < buffer->size());
+    assert(curr >= 0 && curr < static_cast<int32_t>(buffer->size()));
     return tmp;
   }  
 
@@ -109,14 +109,13 @@ private:
 
   void push(T sample) {    
     curr++;
-    if(curr == buffer.size()) {
+    if(curr == static_cast<int32_t>(buffer.size())) {
       curr = 0;
     }
     buffer[curr] = sample;    
   }
 
-  T get(size_t offset) const {  
-    int sz = buffer.size();
+  T get(size_t offset) const {          
     int32_t ind = curr - static_cast<int32_t>(offset);
     if(ind < 0) {
       ind += buffer.size();

@@ -24,7 +24,9 @@ public:
   }
 
   void setSample(size_t x, size_t channel, sample_t sample);
-  sample_t getSample(size_t x, size_t channel, sample_t sample) const;
+  sample_t getSample(size_t x, size_t channel) const;
+
+  void setSampleRate(Frequency sampleRate_p);
 
   FrameFormat getFrameFormat() const;
   Frequency getSampleRate() const;
@@ -32,6 +34,14 @@ public:
   size_t getNumberOfChannels() const;
   size_t getLoopStart() const;
   size_t getLoopEnd() const;
+
+  std::span<const sample_t> getChannel(size_t channel) const {
+    return samples.getRow(channel);
+  }
+
+  std::span<sample_t> getChannel(size_t channel) {
+    return samples.getRow(channel);
+  }
 
 private:
   FrameFormat frameFormat = FrameFormat::None;

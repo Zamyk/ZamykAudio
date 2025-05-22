@@ -28,6 +28,11 @@ public:
   bool operator == (const THandleID& oth) const {
     return ptr == oth.ptr && id == oth.id;
   }
+
+  explicit operator bool() const {
+    return ptr != nullptr;
+  }
+
 private:
   friend Mixer;
   friend AudioEngine;
@@ -37,9 +42,9 @@ private:
   std::shared_ptr<T> ptr;  
   ID id;
 
-  THandleID(ID id_p, std::shared_ptr<T> ptr_p) :
-    id(id_p),
-    ptr(ptr_p) {}
+  THandleID(ID id_p, std::shared_ptr<T> ptr_p) :    
+    ptr(ptr_p),
+    id(id_p) {}
 
   T& get() {
     return *ptr;
@@ -129,6 +134,7 @@ public:
 
   bool died() const;
   bool notUsed() const;
+  bool isPlaying() const;
 private:
   InputHandle handle;
   int32_t useCount = 0;

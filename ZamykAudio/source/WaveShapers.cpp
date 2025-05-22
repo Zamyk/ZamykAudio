@@ -145,8 +145,9 @@ sample_t process(WaveShaperType type, sample_t x, sample_t k) {
     case(WaveShaperType::AbsoluteSquareRoot):
       return absoluteSquareRoot(x);
     break;
-    default:
+    default:      
       assert(false && "wrong enum value");
+      return 0.;
   }  
 }
 

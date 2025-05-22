@@ -24,9 +24,15 @@ public:
     // now sound cache will be able to load these formats    
     soundCache.addLoadingFunction(".wav", WavDecoder::load);
 
-    soundCache.addLoadingFunction(".flac", 
-      [](const std::filesystem::path& path) {
-        return FlacDecoder::load(path);
+    soundCache.addLoadingFunction(".flac",
+      [](const std::filesystem::path& path) -> ResultValue<std::unique_ptr<AudioDecoder>> {
+        auto ans = FlacDecoder::load(path);
+        if(ans) {
+          return static_cast<std::unique_ptr<AudioDecoder>>(std::move(ans.get()));
+        }
+        else {
+          return Result::error(ans.getDescription());
+        }
       }
     );
 
@@ -266,7 +272,11 @@ struct FolderPlayer {
         if(shuffle) {
           playing = randomInt(0, files.size() - 1);
         }      
-        player.play(files[playing]);
+        auto res = player.play(files[playing]);
+        if(!res) {
+          std::cout << res.getDescription() << "\n";
+          return;
+        }
         std::cout << "Playing " << files[playing].filename().string() << " " << player.getDuration().minutes() << " minutes" << std::endl;
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(100));

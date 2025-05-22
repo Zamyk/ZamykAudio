@@ -262,6 +262,7 @@ enum : uint32_t {
   PlayingID,           // call setParameter(PlayingID, bool v)  to set playing status
   LoopedID,            // call setParameter(LoopedID, bool v)   to set loop status
   PositionID,          // call setParameter(PositionID, Time v) to seek in file
+  TempoID,             // call setParameter(TempoID, double v)  to set playback tempo
   GetPositionID,
   GetLength, 
   FadeOutID            // call setParameter(FadeOutID, Time v)  to make input fade out for Time seconds and then end
@@ -269,10 +270,16 @@ enum : uint32_t {
 ```
 - api of FileInput
 ```cpp
-// looped true - sound will be looped,
-// position - starting position in sound (for example position = 10s skips first ten seconds of sound)
-// async true - Decoder will be used from another thread(good for files bad for buffer)
-FileInput(std::unique_ptr<AudioDecoder> decoder_p, bool looped_p = false, Time position = Time::seconds(0.), bool async = true);
+
+
+struct Parameters {
+  bool looped = false; // looped true - sound will be looped,
+  Time position;       // position - starting position in sound (for example position = 10s skips first ten seconds of sound)
+  double tempo = 1.;   // how fast sound will be played, for example 2.0 means twice as fast, 0.5 means two times slower
+  bool async = false;  // async true - Decoder will be used from another thread(good for files bad for buffer)
+};
+
+FileInput(std::unique_ptr<AudioDecoder> decoder_p, const Parameters& parameters);
 void get(std::span<sample_t> out) override;
 void setSampleRate(Frequency sampleRate) override;
 void setParameter(size_t id, ParameterValue value) override;
@@ -350,8 +357,9 @@ To read flac file FlacDecoder can be used. It provides all AudioDecoder methods.
 - tutorial about adding loops in audacity and more https://wohlsoft.ru/pgewiki/How_To:_Looping_music_files 
 
 ```cpp
-static ResultValue<std::unique_ptr<AudioDecoder>> FlacDecoder::load(const std::filesystem::path& path, bool loadLoops  = false);
-static ResultValue<std::unique_ptr<AudioDecoder>> FlacDecoder::loadFromCallback(const FileInputCallbacks& callbacks, bool loadLoops = false);
+static FlacDecoder::CreationResult FlacDecoder::load(const std::filesystem::path& path, bool loadLoops  = false);
+static FlacDecoder::CreationResult FlacDecoder::loadFromCallback(const FileInputCallbacks& callbacks, bool loadLoops = false);
+// CreationResult inherits from ResultValue<std::unique_ptr<AudioDecoder>> and adds additional bool loadedLoops() method
 
 ```
 ---
@@ -395,7 +403,7 @@ and to construct BufferDecoder:
 
 ```cpp
 BufferDecoder(SoundBuffer&& buffer_p);
-BufferDecoder(std::shared_ptr<SoundBuffer> buffer_p);
+BufferDecoder(std::shared_ptr<const SoundBuffer> buffer_p);
 
 // example
 
@@ -1471,6 +1479,16 @@ setEffect(size_t i, std::unique_ptr<Effect> effect)
 setParameter(size_t effectIndex, size_t parameterID, ParameterValue value)
 ```
 
+--- 
+- it is also possible to turn off some effect (set it to bypass)
+```cpp
+enum : uint32_t {
+  StartBypassingEffect,
+  StopBypassingEffect
+};
+setParameter(StartBypassingEffect, ParameterValue::integer(0)) // starts bypassing first effect
+```
+
 - it also automatically sets sample rates of nested effects
 ---
 - example:
@@ -2310,14 +2328,23 @@ void reader(ReaderWriterQueue<int>& queue) {
 ### SampleRateConversion
 
 
-- there are available to functions for sample rate conversion, all methods need out to have enough size:
+- there are available to functions for sample rate conversion:
 ```cpp
-// linear interpolation between samples
+
+
+// out needs to have enough space, probably better to use the SoundBuffer returning versions, unless allocation is not wanted
 void convertSampleRateLinearInterpolation(std::span<const sample_t> in, std::span<sample_t> out, Frequency inSampleRate, Frequency outSampleRate);
 void convertSampleRateLinearInterpolation(std::span<const sample_t> in, std::span<sample_t> out, size_t inSize, size_t outSize);
 
-// sinc filtered (slower but better)
-void convertSampleRateSinc(std::span<const sample_t> in, std::span<sample_t> out, Frequency inSampleRate, Frequency outSampleRate);
+// converts sample rate with linear interpolation and returns SoundBuffer with new sample rate
+SoundBuffer convertSampleRateLinear(const SoundBuffer& in, Frequency outSampleRate);
+
+// converts sample rate with sinc interpolation and returns SoundBuffer with new sample rate, if interrupt is not null, setting it to true will cancel operations
+SoundBuffer convertSampleRateSinc(const SoundBuffer& in, Frequency outSampleRate, int32_t filterRadius = SampleRateConversion::DefaultFilterRadius, std::atomic_bool* interrupt = nullptr);
+
+// change tempo of sound file, uses sinc interpolation, if interrupt is not null, setting it to true will cancel operations
+SoundBuffer changeTempo(const SoundBuffer& in, double tempo, int32_t fitlerRadius = SampleRateConversion::DefaultFilterRadius, std::atomic_bool* interrupt = nullptr);
+
 ```
 
 ---
@@ -2963,6 +2990,9 @@ enum struct Type {
 
 - api:
 ```cpp
+static bool isMiddleSymmetric(Type type);                         // returns true if window(x) == window(-x)
+static double get(Type type, double x);                           // returns value of window in specified x
+static double get(Type type, size_t i, size_t size);              // returns value of window in specified x = i / size
 static void calculateWindow(Type type, std::span<double> window); // calcualtes window of given type and saves it into std::span<double> window
 WindowFunction(size_t size, Type type);                           // constructs WindFunction object with given window type
 void applyWindow(std::span<sample_t> samples) const;              // applies window to samples
@@ -2976,32 +3006,6 @@ void applyGainCorrection(std::span<sample_t> samples) const       // applies gai
 
 There are many small examples in example.cpp and there is also a bit bigger example - CmdPlayer.
 
----
-
-## Building
-
-For example see CmdPlayerExample and examples.
-Remember to use add_definitions(-DZAUDIO_USE_FFT), when using fft dependent effects.
-
-
-### ZamykAudio
-ZamykAudio can be build just by adding cmake subdirectory and using add_library. If not using cmake just build all .cpp files and build needed dependencies. 
-When using cmake place required dependencies into their places.
-
-### fftw3 (optional)
-add fftw3 files to external/fftw3
-
-### pugixml
-add pugixml files to external/pugixml
-
-### ZAudio_SDL_IO
-Add SDL3 files to ZAudio_SDL_IO/SDL
-
-### ZAudio_FileIO
-Add dr_libs files to ZAudio_FileIo/dr_libs
-
-### PortAudioIO
-Add portaudio files to PortAudioIO/portaudio
 
 ---
 
@@ -3074,6 +3078,10 @@ size_t getLength() const;
 size_t getNumberOfChannels();
 size_t getLoopStart() const;
 size_t getLoopEnd() const;
+
+// returns channel span (for exampe for stereo getChannel(0) returns left channel samples)
+std::span<const sample_t> getChannel(size_t channel) const; 
+std::span<sample_t> getChannel(size_t channel);
 ```
 
 - example:

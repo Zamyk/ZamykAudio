@@ -9,12 +9,13 @@ namespace ZAudio::Tools {
 PhaseCorrector::Peak::Peak(size_t position_p, size_t from_p, size_t to_p) : position(position_p), from(from_p), to(to_p) {}
 
 PhaseCorrector::PhaseCorrector(size_t frameSize_p, size_t inputHopSize_p, size_t outputHopSize_p, Algorithm phaseCorrectionAlgorithm_p) : 
-  frameSize(frameSize_p), inputHopSize(inputHopSize_p), 
+  frameSize(frameSize_p),
+  inputHopSize(inputHopSize_p), 
   outputHopSize(outputHopSize_p),
-  prevPhase(frameSize), 
-  prevCorrectedPhase(frameSize),
   stretchRatio(static_cast<double>(outputHopSize) / static_cast<double>(inputHopSize)),
-  phaseCorrectionAlgorithm(phaseCorrectionAlgorithm_p) 
+  phaseCorrectionAlgorithm(phaseCorrectionAlgorithm_p),
+  prevPhase(frameSize),     
+  prevCorrectedPhase(frameSize)  
 {
   peaks.reserve(frameSize / 2);
 }

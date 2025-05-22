@@ -90,11 +90,21 @@ enum : uint32_t {
   PlayingID,
   LoopedID,
   PositionID,
+  TempoID,
   GetPositionID,
   GetLengthID,
   FadeOutID
 };
-  FileInput(std::unique_ptr<AudioDecoder> decoder_p, bool looped_p = false, Time position = Time::seconds(0.), bool async = true);
+struct Parameters {
+  bool looped = false;
+  Time position;
+  double tempo = 1.;
+  bool async = false;
+  
+  Parameters(bool looped_p = false, Time position_p = Time::seconds(0), double tempo_p = 1., bool async_p = false);
+};
+
+  FileInput(std::unique_ptr<AudioDecoder> decoder_p, const Parameters& parameters);
   void get(std::span<sample_t> out) override;
   void setSampleRate(Frequency sampleRate) override;
   void setParameter(size_t id, ParameterValue value) override;
@@ -109,6 +119,7 @@ private:
   bool playing = true;
   bool ended = false;
   bool looped = false;
+  double tempo = 1.;
 
   bool fadingOut = false;  
   Tools::Smoother<Volume> volume;

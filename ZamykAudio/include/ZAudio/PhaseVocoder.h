@@ -68,8 +68,7 @@ private:
   size_t inputHopSize = 0;  
   size_t outputHopSize = 0;  
 
-  size_t numOfInputSamples = 0;
-  size_t outputSampleInd = 0;
+  size_t numOfInputSamples = 0;  
 
   CircularBuffer<sample_t> inputFrame;
   CircularBuffer<sample_t> outputFrame;  

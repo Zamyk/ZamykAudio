@@ -19,7 +19,7 @@ FIR_Filter FIR_Filter::sincFilter(Frequency sampleRate, Frequency cutOffFrequenc
   const double fc = cutOffFrequency.Hz() / sampleRate.Hz();
   double sum = 0.;  
 
-  for(int32_t i = 0; i < windowSize; i++) {
+  for(int32_t i = 0; i < static_cast<int32_t>(windowSize); i++) {
     if(i - windowSize / 2 == 0) {
       filter.coefficients[i] *= 2 * std::numbers::pi * fc;
     }

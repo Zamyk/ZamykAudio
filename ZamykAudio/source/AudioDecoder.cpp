@@ -155,12 +155,17 @@ ResultValue<SoundBuffer> decodeSound(AudioDecoder& decoder) {
 }
 
 
+FileInput::Parameters::Parameters(bool looped_p, Time position_p, double tempo_p, bool async_p) :
+  looped(looped_p),
+  position(position_p),
+  tempo(tempo_p),
+  async(async_p) {}
 
-FileInput::FileInput(std::unique_ptr<AudioDecoder> decoder_p, bool looped_p, Time position, bool async) :
-  decoder( ( async ? std::make_unique<AsyncDecoder>(std::move(decoder_p), Time::seconds(1), looped_p) : std::move(decoder_p) ) ), looped(looped_p)
+FileInput::FileInput(std::unique_ptr<AudioDecoder> decoder_p, const Parameters& parameters) :
+  decoder( ( parameters.async ? std::make_unique<AsyncDecoder>(std::move(decoder_p), Time::seconds(1), parameters.looped) : std::move(decoder_p) ) ), looped(parameters.looped), tempo(parameters.tempo)
 {
-  if(position.miliseconds() > 1) {
-    decoder->seek(position.seconds() * decoder->getSampleRate().Hz());
+  if(parameters.position.miliseconds() > 1) {
+    decoder->seek(parameters.position.seconds() * decoder->getSampleRate().Hz());
   }
   decoder->setLooped(looped);
 }
@@ -197,7 +202,7 @@ void FileInput::get(std::span<sample_t> out) {
 
 void FileInput::setSampleRate(Frequency sampleRate_p) {
   sampleRate = sampleRate_p;
-  sampleRateConverters.resize(Tools::numberOfChannels(decoder->getFormat()), Tools::SampleRateConverter(decoder->getSampleRate(), sampleRate));
+  sampleRateConverters.resize(Tools::numberOfChannels(decoder->getFormat()), Tools::SampleRateConverter(decoder->getSampleRate(), sampleRate / tempo));  
 }
 
 static Time sampleToTime(uint32_t position, Frequency sampleRate) {
@@ -224,9 +229,16 @@ void FileInput::setParameter(size_t id, ParameterValue value) {
       decoder->seek(timeToSample(value.getTime(), decoder->getSampleRate()));
       break;
 
+    case TempoID:
+      for(auto& sampleRateConverter : sampleRateConverters) {
+        tempo = value.getNonInteger();
+        sampleRateConverter.setOutSampleRateNoFilterUpdate(sampleRate / tempo);
+      }
+      break;
+
     case FadeOutID:
       fadingOut = true;
-      volume = Tools::Smoother<Volume>(sampleRate, Volume::dB(0), Volume::dB(40 / value.getTime().seconds()));
+      volume = Tools::Smoother<Volume>(sampleRate, volume.getCurrentValue(), Volume::dB(40 / value.getTime().seconds()));
       volume.setDestination(Volume::dB(-40));
       break;
 
@@ -247,6 +259,7 @@ ParameterValue FileInput::getOutputValue(size_t id) const {
 
     default:
       assert(false);
+      return ParameterValue();
   }
 }
 

@@ -35,14 +35,9 @@ Volume DelayGainController::process(Volume env) {
   if(env > threshold) {
     current = wetMin;            
   }
-  else {
-    double tmp1 = Volume::dB(-96).linear();
-    double currdb = current.dB();
-    double wetmaxdb = wetMax.dB();
-    double nc = fmin(currdb + increaseDB, wetmaxdb);
+  else {        
     double tmp = fmin(current.dB() + increaseDB, wetMax.dB());
-    current = Volume::dB(tmp);      
-    double cdb = current.dB();
+    current = Volume::dB(tmp);          
   }  
   return current;
 }

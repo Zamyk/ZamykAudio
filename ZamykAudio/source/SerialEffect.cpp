@@ -2,16 +2,16 @@
 #include <ZAudio/BypassEffect.h>
 
 namespace ZAudio {
-  
 
-SerialEffect::SerialEffect(size_t n) : effects(n) {
-  assert(effects.size());    
+
+SerialEffect::SerialEffect(size_t n) : effects(n), bypass(n, false) {
+  assert(effects.size());
   for(auto& effect : effects) {
     effect = std::make_unique<BypassEffect>(FrameFormat::Mono, FrameFormat::Mono);
-  }      
+  }
 }
 
-void SerialEffect::setEffect(size_t i, std::unique_ptr<Effect> effect) {    
+void SerialEffect::setEffect(size_t i, std::unique_ptr<Effect> effect) {
   effects[i] = std::move(effect);
   if(sampleRateSet) {
     effects[i]->setSampleRate(sampleRate);
@@ -21,7 +21,7 @@ void SerialEffect::setEffect(size_t i, std::unique_ptr<Effect> effect) {
 FrameFormat SerialEffect::getOutputFormat() const {
   return effects.back()->getOutputFormat();
 }
-  
+
 FrameFormat SerialEffect::getInputFormat() const {
   return effects.front()->getOutputFormat();
 }
@@ -29,6 +29,7 @@ FrameFormat SerialEffect::getInputFormat() const {
 void SerialEffect::process(std::span<const sample_t> in, std::span<sample_t> out) {
   std::array<sample_t, Tools::MaxNumberOfChannels> frame1;
   std::array<sample_t, Tools::MaxNumberOfChannels> frame2;
+  std::array<sample_t, Tools::MaxNumberOfChannels> tmp;
   std::fill(frame1.begin(), frame1.end(), 0.);
   std::fill(frame2.begin(), frame2.end(), 0.);
   std::fill(out.begin(), out.end(), 0.);
@@ -37,14 +38,33 @@ void SerialEffect::process(std::span<const sample_t> in, std::span<sample_t> out
     frame1[i] = in[i];
   }
 
-  for(auto it = effects.begin(); std::next(it) != effects.end(); ++it) {
-    (*it)->process(frame1, frame2);
-    Tools::convertFrames(frame2, (*it)->getOutputFormat(), frame1, (*std::next(it))->getInputFormat());
+  for(int32_t i = 0; i < static_cast<int32_t>(effects.size()) - 1; i++) {
+    if(bypass[i]) {
+      Tools::convertFrames(frame1, effects[i]->getInputFormat(), frame2, effects[i]->getOutputFormat());
+      effects[i]->process(frame1, tmp); // so effect have recent data fed even when bypassed
+    }
+    else {
+      effects[i]->process(frame1, frame2);
+    }    
+    Tools::convertFrames(frame2, effects[i]->getOutputFormat(), frame1, (effects[i + 1])->getInputFormat());
   }
-  effects.back()->process(frame1, out);
+  if(bypass.back()) {
+    Tools::convertFrames(frame1, effects.back()->getInputFormat(), out, effects.back()->getOutputFormat());
+    effects.back()->process(frame1, tmp);
+  }
+  else {
+    effects.back()->process(frame1, out);
+  }  
 }
 
-void SerialEffect::setParameter(size_t id, ParameterValue value) {}
+void SerialEffect::setParameter(size_t id, ParameterValue value) {
+  if(id == StartBypassingEffect) {
+    bypass[value.getInteger()] = true;
+  }
+  if(id == StopBypassingEffect) {
+    bypass[value.getInteger()] = false;
+  }
+}
 
 void SerialEffect::setSampleRate(Frequency sampleRate_p) {
   sampleRate = sampleRate_p;
@@ -69,7 +89,7 @@ uint32_t SerialEffect::getTailTime() const {
 std::unique_ptr<Effect> SerialEffect::clone() const {
   auto effect = std::make_unique<SerialEffect>(effects.size());
   for(size_t i = 0; i < effects.size(); i++) {
-    effect->effects[i] = std::move(effects[i]->clone());
+    effect->effects[i] = effects[i]->clone();
   }
   return std::move(effect);
 }

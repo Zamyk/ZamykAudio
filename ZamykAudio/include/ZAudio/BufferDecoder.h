@@ -10,7 +10,7 @@ namespace ZAudio {
 class BufferDecoder : public AudioDecoder {
 public:
   BufferDecoder(SoundBuffer&& buffer_p);
-  BufferDecoder(std::shared_ptr<SoundBuffer> buffer_p);
+  BufferDecoder(std::shared_ptr<const SoundBuffer> buffer_p);
   bool get(std::span<sample_t> out) override;
   void seek(uint64_t position) override;
   uint64_t getLength() override;
@@ -23,7 +23,7 @@ public:
   FrameFormat getFormat() const override;  
 private:
   bool looped = false;
-  std::shared_ptr<SoundBuffer> buffer;  
+  std::shared_ptr<const SoundBuffer> buffer;  
   uint64_t position = 0;  
 };
 

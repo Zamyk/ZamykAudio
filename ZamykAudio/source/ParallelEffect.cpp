@@ -4,10 +4,10 @@
 namespace ZAudio {
 
 
-ParallelEffect::ParallelEffect(FrameFormat inputFormat_p, FrameFormat outputFormat_p, size_t n)  : 
-  inputFormat(inputFormat_p),
-  outputFormat(outputFormat_p),
-  effects(n) 
+ParallelEffect::ParallelEffect(FrameFormat inputFormat_p, FrameFormat outputFormat_p, size_t n)  :   
+  effects(n),
+  inputFormat(inputFormat_p),  
+  outputFormat(outputFormat_p)
   {
     assert(effects.size());
     effects.front() = std::make_unique<BypassEffect>(inputFormat_p, outputFormat_p);
@@ -75,7 +75,7 @@ uint32_t ParallelEffect::getTailTime() const {
 std::unique_ptr<Effect> ParallelEffect::clone() const {
   auto effect = std::make_unique<ParallelEffect>(inputFormat, outputFormat, effects.size());
   for(size_t i = 0; i < effects.size(); i++) {
-    effect->effects[i] = std::move(effects[i]->clone());
+    effect->effects[i] = effects[i]->clone();
   }
   return std::move(effect);
 }

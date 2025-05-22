@@ -5,7 +5,7 @@ namespace ZAudio {
 
 BufferDecoder::BufferDecoder(SoundBuffer&& buffer_p) : buffer(std::make_shared<SoundBuffer>(std::move(buffer_p))) {}
 
-BufferDecoder::BufferDecoder(std::shared_ptr<SoundBuffer> buffer_p) : buffer(buffer_p) {}
+BufferDecoder::BufferDecoder(std::shared_ptr<const SoundBuffer> buffer_p) : buffer(buffer_p) {}
 
 bool BufferDecoder::get(std::span<sample_t> out) {
   if(looped && position >= buffer->getLoopEnd()) {

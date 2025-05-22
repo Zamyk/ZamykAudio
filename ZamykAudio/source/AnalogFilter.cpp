@@ -8,9 +8,9 @@ namespace ZAudio::Tools {
 AnalogFilter::Parameters::Parameters(Type type_p, Frequency sampleRate_p, Frequency frequency_p, double q_p, Volume gain_p) :
   type(type_p),
   sampleRate(sampleRate_p),
-  frequency(frequency_p),
-  q(q_p),
-  gain(gain_p) {}  
+  frequency(frequency_p),  
+  gain(gain_p),
+  q(q_p) {}  
 
 AnalogFilter::Parameters createByPassParameters() {
   return AnalogFilter::Parameters();

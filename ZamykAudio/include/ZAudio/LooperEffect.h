@@ -64,8 +64,7 @@ public:
 private:
   Parameters parameters;  
   Mode mode = Mode::Paused;
-
-  bool filling = true;  
+  
   uint32_t duration = 0;  
   uint32_t maxDuration = 0;  
   Tools::CircularBuffer<sample_t> buffer;

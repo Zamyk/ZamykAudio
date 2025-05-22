@@ -24,6 +24,8 @@ enum struct SeekOrigin {
 };
   virtual size_t read(uint8_t* data, size_t n) = 0;
   virtual bool seek(size_t pos, SeekOrigin origin) = 0;
+  virtual std::optional<size_t> tell() = 0;
+
   virtual ~FileInputStream() {}
 };
 
@@ -75,14 +77,22 @@ public:
 struct FlacFileInput {
   std::unique_ptr<FileInputStream> input;
   int64_t loopStart = -1;
-  int64_t loopEnd = -1;
+  int64_t loopEnd = -1;  
 
   FlacFileInput(std::unique_ptr<FileInputStream> input_p) : input(std::move(input_p)) {}
 };
-  static ResultValue<std::unique_ptr<AudioDecoder>> load(const std::filesystem::path& path, bool loadLoops = false);
-  static ResultValue<std::unique_ptr<AudioDecoder>> loadFromStream(std::unique_ptr<FileInputStream> fileInput, bool loadLoops = false);
+class CreationResult : public ResultValue<std::unique_ptr<FlacDecoder>> {
+public:
+  CreationResult(ResultValue<std::unique_ptr<FlacDecoder>>&& result, bool loopsLoaded_p);
+  bool loadedLoops() const;
+private:
+  bool loadedLoopsV = false;
+};
 
-  FlacDecoder(std::unique_ptr<FileInputStream> fileInput, bool loadLoops, Result& result);
+  static CreationResult load(const std::filesystem::path& path, bool loadLoops = false);
+  static CreationResult loadFromStream(std::unique_ptr<FileInputStream> fileInput, bool loadLoops = false);
+
+  FlacDecoder(std::unique_ptr<FileInputStream> fileInput, bool& loadLoops, Result& result);
   ~FlacDecoder();
 
   // move only

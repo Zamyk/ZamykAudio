@@ -10,12 +10,12 @@ namespace ZAudio::Tools {
 namespace SmootherConverters {
 
 template<typename T>
-double toDouble(T v) {  
+double toDouble(T v) {
   return v;
 }
 
 template<typename T>
-T fromDouble(double d) {  
+T fromDouble(double d) {
   return d;
 }
 
@@ -55,14 +55,14 @@ template<typename T>
 class Smoother {
 public:
   Smoother()= default;
-  Smoother(Frequency sampleRate, T from_p, T maxChangePerSecond) : 
+  Smoother(Frequency sampleRate, T from_p, T maxChangePerSecond) :
     curr(SmootherConverters::toDouble(from_p)),
-    step(calculateStep(sampleRate, SmootherConverters::toDouble(maxChangePerSecond))),
     to(curr),
+    step(calculateStep(sampleRate, SmootherConverters::toDouble(maxChangePerSecond))),
     ended(true) {}
 
   void setDestination(T to_p) {
-    to = SmootherConverters::toDouble(to_p);    
+    to = SmootherConverters::toDouble(to_p);
     ended = false;
   }
 
@@ -73,19 +73,23 @@ public:
   }
 
   T update() {
-    changed = false;    
+    changed = false;
     if(!ended) {
-      if(std::fabs(to - curr) > step) {        
-        curr += step * (to > curr ? 1 : -1);        
-        changed = true;      
+      if(std::fabs(to - curr) > step) {
+        curr += step * (to > curr ? 1 : -1);
+        changed = true;
       }
       else {
         curr = to;
         ended = true;
-      }    
+      }
     }
     return SmootherConverters::fromDouble<T>(curr);
-  }  
+  }
+
+  T getCurrentValue() const {
+    return SmootherConverters::fromDouble<T>(curr);
+  }
 
   bool hasChanged() const {
     return changed;
@@ -94,7 +98,7 @@ public:
 private:
   double curr = 0.;
   double to = 0.;
-  double step = 0.;  
+  double step = 0.;
   bool changed = false;
   bool ended = false;
 

@@ -27,6 +27,19 @@ static drwav_bool32 drMp3Onseek(void* pUserData, int offset, drmp3_seek_origin o
   return input->seek(offset, eorigin);
 }
 
+static drwav_bool32 drMp3OnTell(void* pUserData, drmp3_int64* pCursor) {
+  FileInputStream* input = static_cast<FileInputStream*>(pUserData);  
+  if(auto ans = input->tell()) {
+    *pCursor = *ans;
+    return true;
+  }
+  return false;
+}
+
+void drMp3OnMeta(void* pUserData, const drmp3_metadata* pMetadata) {
+
+}
+
 
 static size_t drFlacOnRead(void* pUserData, void* pBufferOut, size_t bytesToRead) {
   const FlacDecoder::FlacFileInput* flacInput = static_cast<FlacDecoder::FlacFileInput*>(pUserData);
@@ -40,7 +53,7 @@ static drwav_bool32 drFlacOnSeek(void* pUserData, int offset, drflac_seek_origin
 }
 
 size_t drWriteOnWrite(void* pUserData, const void* pData, size_t bytesToWrite) {
-  FileOutputStream* output = static_cast<FileOutputStream*>(pUserData);  
+  FileOutputStream* output = static_cast<FileOutputStream*>(pUserData);
   return output->write(static_cast<const uint8_t*>(pData), bytesToWrite);
 }
 
@@ -90,6 +103,14 @@ public:
 
   bool seek(size_t pos, SeekOrigin origin) override {
     return fseek(file, pos, (origin == SeekOrigin::Start ? SEEK_SET : SEEK_CUR)) == 0;
+  }
+
+  std::optional<size_t> tell() override {
+    auto ans = ftell(file);
+    if(ans < 0) {
+      return std::nullopt;
+    }
+    return ans;
   }
 
   ~FileInputStreamStd() {
@@ -152,8 +173,7 @@ static void drFlacOnMeta(void* pUserData, drflac_metadata* pMetadata) {
     drwav_uint32 length = 0;
     const char* cstr = drflac_next_vorbis_comment(&it, &length);
     while(cstr) {
-      std::string str = cstr;
-      cstr = drflac_next_vorbis_comment(&it, &length);
+      std::string str(cstr, length);      
       auto i = str.find('=');
       if(i != std::string::npos) {
         std::string s1 = str.substr(0, i);
@@ -165,6 +185,7 @@ static void drFlacOnMeta(void* pUserData, drflac_metadata* pMetadata) {
           flacInput->loopEnd = parse_time(s2);
         }
       }
+      cstr = drflac_next_vorbis_comment(&it, &length);
     }
   }
 }
@@ -183,7 +204,7 @@ ResultValue<std::unique_ptr<AudioDecoder>> WavDecoder::load(const std::filesyste
   auto in = std::make_unique<FileInputStreamStd>();
   if(!in->open(path)) {
     return Result::error("Couldn't open file" + path.string());
-  }  
+  }
   return loadFromStream(std::move(in));
 }
 
@@ -272,24 +293,32 @@ FrameFormat WavDecoder::getFormat() const {
 
 // FlacDecoder---------------------------------------------------------------------------------------------------
 
-ResultValue<std::unique_ptr<AudioDecoder>> FlacDecoder::load(const std::filesystem::path& path, bool loadLoops) {
+FlacDecoder::CreationResult::CreationResult(ResultValue<std::unique_ptr<FlacDecoder>>&& result, bool loopsLoaded_p) :
+  ResultValue<std::unique_ptr<FlacDecoder>>(std::move(result)),
+  loadedLoopsV(loopsLoaded_p) {}
+
+bool FlacDecoder::CreationResult::loadedLoops() const {
+  return loadedLoopsV;
+}
+
+FlacDecoder::CreationResult FlacDecoder::load(const std::filesystem::path& path, bool loadLoops) {
   auto in = std::make_unique<FileInputStreamStd>();
   if(!in->open(path)) {
-    return Result::error("Couldn't open file" + path.string());
-  }  
+    return CreationResult(Result::error("Couldn't open file" + path.string()), false);
+  }
   return loadFromStream(std::move(in), loadLoops);
 }
 
-ResultValue<std::unique_ptr<AudioDecoder>> FlacDecoder::loadFromStream(std::unique_ptr<FileInputStream> fileInput, bool loadLoops) {
+FlacDecoder::CreationResult FlacDecoder::loadFromStream(std::unique_ptr<FileInputStream> fileInput, bool loadLoops) {
   Result res;
   auto ans = std::make_unique<FlacDecoder>(std::move(fileInput), loadLoops, res);
   if(!res) {
-    return res;
+    return CreationResult(res, false);
   }
-  return static_cast<std::unique_ptr<AudioDecoder>>(std::move(ans));
+  return CreationResult(std::move(ans), loadLoops);
 }
 
-FlacDecoder::FlacDecoder(std::unique_ptr<FileInputStream> fileInput_p, bool loadLoops, Result& result) : fileInput(std::make_unique<FlacFileInput>(std::move(fileInput_p))) {
+FlacDecoder::FlacDecoder(std::unique_ptr<FileInputStream> fileInput_p, bool& loadLoops, Result& result) : fileInput(std::make_unique<FlacFileInput>(std::move(fileInput_p))) {
   result = Result::success();
   if(loadLoops) {
     flac = drflac_open_with_metadata(drFlacOnRead, drFlacOnSeek, drFlacOnMeta, const_cast<void*>(static_cast<const void*>(fileInput.get())), nullptr);
@@ -302,6 +331,7 @@ FlacDecoder::FlacDecoder(std::unique_ptr<FileInputStream> fileInput_p, bool load
     loopEnd = fileInput->loopEnd;
   }
   else {
+    loadLoops = false;
     loopStart = 0;
     loopEnd = getLength();
   }
@@ -382,7 +412,7 @@ ResultValue<std::unique_ptr<AudioDecoder>> Mp3Decoder::load(const std::filesyste
   auto in = std::make_unique<FileInputStreamStd>();
   if(!in->open(path)) {
     return Result::error("Couldn't open file" + path.string());
-  }  
+  }
   return loadFromStream(std::move(in));
 }
 
@@ -397,7 +427,7 @@ ResultValue<std::unique_ptr<AudioDecoder>> Mp3Decoder::loadFromStream(std::uniqu
 
 Mp3Decoder::Mp3Decoder(std::unique_ptr<FileInputStream> fileInput_p, Result& result) : fileInput(std::move(fileInput_p)) {
   result = Result::success();
-  if (!drmp3_init(&mp3, drOnRead, drMp3Onseek, const_cast<void*>(static_cast<const void*>(fileInput.get())), nullptr)) {
+  if (!drmp3_init(&mp3, drOnRead, drMp3Onseek, drMp3OnTell, drMp3OnMeta, const_cast<void*>(static_cast<const void*>(fileInput.get())), nullptr)) {
     init = false;
     result = Result::error("Error loading mp3 from callbacks");
   }
@@ -474,7 +504,7 @@ ResultValue<std::unique_ptr<AudioEncoder>> WavEncoder::create(Frequency sampleRa
   auto out = std::make_unique<FileOutputStreamStd>();
   if(!out->open(path)) {
     return Result::error("Couldn't open file" + path.string());
-  }  
+  }
   return createWithStream(sampleRate_p, format_p, std::move(out));
 }
 
@@ -488,9 +518,9 @@ ResultValue<std::unique_ptr<AudioEncoder>> WavEncoder::createWithStream(Frequenc
 }
 
 WavEncoder::WavEncoder(Frequency sampleRate_p, FrameFormat format_p, std::unique_ptr<FileOutputStream> fileOutput_p, Result& result) :
+  fileOutput(std::move(fileOutput_p)),
   sampleRate(sampleRate_p),
-  format(format_p),
-  fileOutput(std::move(fileOutput_p))
+  format(format_p)
 {
   result = Result::success();
   drwav_data_format wavFormat;

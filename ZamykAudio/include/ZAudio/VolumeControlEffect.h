@@ -11,9 +11,9 @@ class VolumeControlEffect : public Effect {
 public:    
   struct Parameters {
     Volume volumeChange;
-    Volume maxChangePerSecond;
+    Volume maxChangePerSecond = Volume::dB(60);
     Parameters() = default;
-    Parameters(Volume volumeChange_p, Volume maxChangePerSecond_p = Volume::dB(30)) : volumeChange(volumeChange_p), maxChangePerSecond(maxChangePerSecond_p) {}
+    Parameters(Volume volumeChange_p, Volume maxChangePerSecond_p = Volume::dB(60)) : volumeChange(volumeChange_p), maxChangePerSecond(maxChangePerSecond_p) {}
   };  
   static constexpr uint32_t NumOfParameters = 2;
   enum : uint32_t {

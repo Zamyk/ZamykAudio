@@ -140,4 +140,55 @@ const std::vector<std::complex<double>>& FFT::getBins() const {
 
 } // namespace ZAudio::Tools
 
+#else
+
+namespace ZAudio::Tools {
+
+FFT::FFT(size_t frameSize_p) 
+  : frameSize(frameSize_p), samples(frameSize), bins(frameSize)
+{
+}
+
+
+
+FFT::FFT(FFT&& oth) noexcept {
+}  
+
+FFT& FFT::operator= (FFT&& oth) noexcept {
+  return *this;
+}
+
+FFT::~FFT() {
+}
+
+void FFT::doFFT() {  
+  assert(false);  
+}
+
+void FFT::doInverseFFT() {
+  assert(false);
+}
+
+std::vector<sample_t>& FFT::getSamples() {
+  assert(false);
+  return samples;
+}
+
+const std::vector<sample_t>& FFT::getSamples() const {
+  assert(false);
+  return samples;
+}
+
+std::vector<std::complex<double>>& FFT::getBins() {
+  assert(false);
+  return bins;
+}
+
+const std::vector<std::complex<double>>& FFT::getBins() const {
+  assert(false);
+  return bins;
+}
+
+} // namespace
+
 #endif

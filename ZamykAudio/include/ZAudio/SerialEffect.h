@@ -8,8 +8,13 @@ namespace ZAudio {
 
 class SerialEffect : public Effect {
 public:
-
   SerialEffect(size_t n);
+
+  enum : uint32_t {
+    StartBypassingEffect,
+    StopBypassingEffect
+  };
+
   void setEffect(size_t i, std::unique_ptr<Effect> effect);
   FrameFormat getOutputFormat() const override;
   FrameFormat getInputFormat() const override;
@@ -29,6 +34,7 @@ private:
   bool sampleRateSet = false;
   Frequency sampleRate;
   std::vector<std::unique_ptr<Effect>> effects;
+  std::vector<bool> bypass;
 };
 
 

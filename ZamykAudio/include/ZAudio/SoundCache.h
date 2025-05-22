@@ -17,7 +17,7 @@ public:
   uint32_t& get();
   bool operator == (const CacheSoundID& oth) const;
 private:
-  uint32_t id = 0;  
+  uint32_t id = 0;
 };
 
 
@@ -37,20 +37,20 @@ namespace ZAudio {
 
 class SoundCache {
 public:
-using LoadingFunction = std::function<ResultValue<std::unique_ptr<AudioDecoder>>(const std::filesystem::path&)>;  
+using LoadingFunction = std::function<ResultValue<std::unique_ptr<AudioDecoder>>(const std::filesystem::path&)>;
 enum struct OpenMode {
   Stream, PreBuffer
-};  
+};
   void addLoadingFunction(const std::string& extension, LoadingFunction loadingFunction);
   std::optional<CacheSoundID> add(const std::filesystem::path& path, OpenMode openMode = SoundCache::OpenMode::PreBuffer);
   std::unique_ptr<FileInput> getSound(CacheSoundID id, bool playing = true, bool looped = false, Time position = Time::seconds(0));
   std::string getError() const;
-private:    
+private:
   std::unordered_map<std::string, LoadingFunction> loadingFunctions;
   std::unordered_map<CacheSoundID, std::shared_ptr<SoundBuffer>> preBufferedSounds;
   std::unordered_map<CacheSoundID, std::filesystem::path> streamSounds;
-  uint32_t lastID = 0;  
-  std::string error;      
+  uint32_t lastID = 0;
+  std::string error;
 };
 
 
