@@ -14,10 +14,10 @@ SDL_IO::~SDL_IO() {
 bool SDL_IO::init(Frequency sampleRate_p) {
   sampleRate = sampleRate_p;
   stopFlag = std::make_shared<std::atomic_bool>(false);
-  finishedFlag = std::make_shared<std::atomic_bool>(false);
+  finishedFlag = std::make_shared<std::atomic_bool>(true);
   
   if(!SDL_Init(SDL_INIT_AUDIO)) {
-    error = SDL_GetError();
+    error = SDL_GetError();    
     return false;
   }  
   return true;
