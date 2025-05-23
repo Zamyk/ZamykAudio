@@ -206,7 +206,7 @@ static void drFlacOnMeta(void* pUserData, drflac_metadata* pMetadata) {
       if(l.type == MetadataLoopInfo::Type::LoopStart) {
         flacInput->loopStart = l.value;
       }
-      else if(l.type == MetadataLoopInfo::Type::LoopStart) {
+      else if(l.type == MetadataLoopInfo::Type::LoopEnd) {
         flacInput->loopEnd = l.value;
       }
       cstr = drflac_next_vorbis_comment(&it, &length);
@@ -556,7 +556,7 @@ void VorbisDecoder::setLooped(bool looped_p) {
 
 uint64_t VorbisDecoder::getLength() {
   if(vorbis) {
-    stb_vorbis_stream_length_in_samples(vorbis);
+    return stb_vorbis_stream_length_in_samples(vorbis);
   }
   else {
     return 0;
