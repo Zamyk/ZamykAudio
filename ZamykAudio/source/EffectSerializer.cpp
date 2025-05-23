@@ -107,7 +107,7 @@ ResultValue<std::unique_ptr<Effect>> EffectSerializer::load(TreeDatabaseReader r
     return r;
   }
 
-  return std::move(effect);
+  return effect;
 }
 
 Result EffectSerializer::save(TreeDatabase& database, const Effect& effect) {

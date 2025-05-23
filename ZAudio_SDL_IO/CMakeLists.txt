@@ -9,4 +9,4 @@ if(ZAUDIO_USE_OWN_SDL)
 endif()
 
 target_include_directories(ZAudio_SDL_IO PUBLIC include)
-target_link_libraries(ZAudio_SDL_IO PUBLIC ZamykAudio external SDL3::SDL3)
+target_link_libraries(ZAudio_SDL_IO PUBLIC ZamykAudio ZAudio_external SDL3::SDL3)

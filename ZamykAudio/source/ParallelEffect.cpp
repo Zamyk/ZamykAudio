@@ -77,7 +77,7 @@ std::unique_ptr<Effect> ParallelEffect::clone() const {
   for(size_t i = 0; i < effects.size(); i++) {
     effect->effects[i] = effects[i]->clone();
   }
-  return std::move(effect);
+  return effect;
 }
 
 Result ParallelEffect::save(Tools::TreeDatabaseWriter writer) const {

@@ -40,7 +40,7 @@ public:
       // get value first so push can't change it
       T ans = std::move(buffer[readIndex]);
       readIndex = next(readIndex);
-      return std::move(ans);
+      return ans;
     }    
     else {
       return std::nullopt;

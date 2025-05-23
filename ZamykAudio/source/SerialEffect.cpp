@@ -91,7 +91,7 @@ std::unique_ptr<Effect> SerialEffect::clone() const {
   for(size_t i = 0; i < effects.size(); i++) {
     effect->effects[i] = effects[i]->clone();
   }
-  return std::move(effect);
+  return effect;
 }
 
 Result SerialEffect::save(Tools::TreeDatabaseWriter writer) const {

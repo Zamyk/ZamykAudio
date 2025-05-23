@@ -59,5 +59,5 @@ source/Math.cpp
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 target_compile_features(ZamykAudio PUBLIC cxx_std_20)
-target_link_libraries(ZamykAudio PUBLIC external)
+target_link_libraries(ZamykAudio PUBLIC ZAudio_external)
 target_include_directories(ZamykAudio PUBLIC include )
