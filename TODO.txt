@@ -1,9 +1,5 @@
 1. Potential delay problem with SDL_IO input, because of not emptying buffer
 2. Passing parameters to engine in batches instead of always
 
-- make sure options make sense
 - check fft
 - check if everything works with outside building
-- add ogg vorbis
-- find warnings / maybe linter
-- update doc and add to github stuff
