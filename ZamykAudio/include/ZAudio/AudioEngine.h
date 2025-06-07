@@ -63,6 +63,11 @@ public:
   bool operator == (const THandle& oth) const {
     return ptr == oth.ptr;
   }
+  
+  explicit operator bool() const {
+    return ptr != nullptr;
+  }
+
 private:
   friend Mixer;
   friend AudioEngine;

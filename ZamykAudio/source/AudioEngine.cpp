@@ -256,6 +256,9 @@ MixerHandle AudioEngine::addMixer(FrameFormat format) {
 }
 
 MixerHandle AudioEngine::addMixer(EffectHandle effect) {
+  if(!effect) {
+    return MixerHandle();
+  }
   MixerHandle handle(std::make_shared<Mixer>(effect, &inputs));
   Command command;
   command.type = Command::Type::AddMixer;
@@ -265,6 +268,9 @@ MixerHandle AudioEngine::addMixer(EffectHandle effect) {
 }
 
 void AudioEngine::addMixerOutput(const MixerHandle& input, const OutputHandle& output) {
+  if(!input || !output) {
+    return;
+  }
   Command command;
   command.type = Command::Type::AddMixerOutput;
   command.handle = input;
@@ -273,6 +279,9 @@ void AudioEngine::addMixerOutput(const MixerHandle& input, const OutputHandle& o
 }
 
 void AudioEngine::removeMixerOutput(const MixerHandle& mixer, const OutputHandle& output) {
+  if(!mixer || !output) {
+    return;
+  }
   Command command;
   command.type = Command::Type::RemoveMixerOutput;
   command.handle = mixer;
@@ -281,6 +290,9 @@ void AudioEngine::removeMixerOutput(const MixerHandle& mixer, const OutputHandle
 }
 
 void AudioEngine::setMixerEffect(const MixerHandle& mixer, const EffectHandle& effect) {
+  if(!mixer || !effect) {
+    return;
+  }
   Command command;
   command.type = Command::Type::SetMixerEffect;
   command.handle = mixer;
@@ -289,6 +301,9 @@ void AudioEngine::setMixerEffect(const MixerHandle& mixer, const EffectHandle& e
 }
 
 void AudioEngine::play(const MixerHandle& mixer, const InputHandle& input, const EffectHandle& effect) {
+  if(!mixer || !input || !effect) {
+    return;
+  }
   Command command;
   command.type = Command::Type::Play;
   command.handle = mixer;
@@ -298,6 +313,9 @@ void AudioEngine::play(const MixerHandle& mixer, const InputHandle& input, const
 }
 
 void AudioEngine::play(const MixerHandle& mixer, const InputHandle& input) {
+  if(!mixer || !input) {
+    return;
+  }
   Command command;
   command.type = Command::Type::Play;
   command.handle = mixer;
@@ -307,6 +325,9 @@ void AudioEngine::play(const MixerHandle& mixer, const InputHandle& input) {
 }
 
 void AudioEngine::stop(const MixerHandle& mixer, const InputHandle& input) {
+  if(!mixer || !input) {
+    return;
+  }
   Command command;
   command.type = Command::Type::Stop;
   command.handle = mixer;
@@ -315,6 +336,9 @@ void AudioEngine::stop(const MixerHandle& mixer, const InputHandle& input) {
 }
 
 EffectHandle AudioEngine::addEffect(std::unique_ptr<Effect> effect) {
+  if(!effect) {
+    return EffectHandle();
+  }
   effect->setSampleRate(sampleRate);
   EffectHandle handle(std::move(effect));
   Command command;
@@ -325,6 +349,9 @@ EffectHandle AudioEngine::addEffect(std::unique_ptr<Effect> effect) {
 }
 
 void AudioEngine::setEffectParameter(const EffectHandle& handle, size_t parameterID, const ParameterValue& v) {
+  if(!handle) {
+    return;
+  }
   Command command;
   command.type = Command::Type::SetEffectParameter;
   command.handle = handle;
@@ -334,6 +361,9 @@ void AudioEngine::setEffectParameter(const EffectHandle& handle, size_t paramete
 }
 
 void AudioEngine::setMultiEffectParameter(const EffectHandle& handle, size_t effectID, size_t parameterID, const ParameterValue& v) {
+  if(!handle) {
+    return;
+  }
   Command command;
   command.type = Command::Type::SetMultiEffectParameter;
   command.handle = handle;
@@ -344,6 +374,9 @@ void AudioEngine::setMultiEffectParameter(const EffectHandle& handle, size_t eff
 }
 
 InputHandle AudioEngine::addInput(std::unique_ptr<AudioInput> input) {
+  if(!input) {
+    return InputHandle();
+  }
   input->setSampleRate(sampleRate);
   InputHandle handle(getNextID<AudioEngineInputID>(), std::move(input));
   Command command;
@@ -354,6 +387,9 @@ InputHandle AudioEngine::addInput(std::unique_ptr<AudioInput> input) {
 }
 
 void AudioEngine::setInputParameter(const InputHandle& handle, size_t parameterID, const ParameterValue& v ) {
+  if(!handle) {
+    return;
+  }
   Command command;
   command.type = Command::Type::SetInputParameter;
   command.handle = handle;
@@ -363,6 +399,9 @@ void AudioEngine::setInputParameter(const InputHandle& handle, size_t parameterI
 }
 
 OutputHandle AudioEngine::addOutput(std::unique_ptr<AudioOutput> output) {
+  if(!output) {
+    return OutputHandle();
+  }
   output->setSampleRate(sampleRate);
   OutputHandle handle(getNextID<AudioEngineOutputID>(), std::move(output));
   Command command;
@@ -373,6 +412,9 @@ OutputHandle AudioEngine::addOutput(std::unique_ptr<AudioOutput> output) {
 }
 
 void AudioEngine::setOutputParameter(const OutputHandle& handle, size_t parameterID, const ParameterValue& v) {
+  if(!handle) {
+    return;
+  }
   Command command;
   command.type = Command::Type::SetOutputParameter;
   command.handle = handle;
@@ -382,6 +424,9 @@ void AudioEngine::setOutputParameter(const OutputHandle& handle, size_t paramete
 }
 
 bool AudioEngine::isPlaying(const InputHandle& handle) {
+  if(!handle) {
+    return false;
+  }
   Command command;
   command.type = Command::Type::AskIsPlaying;
   command.handle = handle;
@@ -390,6 +435,9 @@ bool AudioEngine::isPlaying(const InputHandle& handle) {
 }
 
 bool AudioEngine::hasEnded(const OutputHandle& handle) {
+  if(!handle) {    
+    return true;
+  }
   Command command;
   command.type = Command::Type::AskHasEnded;
   command.handle = handle;
@@ -398,6 +446,9 @@ bool AudioEngine::hasEnded(const OutputHandle& handle) {
 }
 
 ParameterValue AudioEngine::getOutputValue(const InputHandle& handle, size_t id) {
+  if(!handle) {    
+    return ParameterValue();
+  }
   Command command;
   command.type = Command::Type::GetAudioInputOutputValue;
   command.handle = handle;
@@ -407,6 +458,9 @@ ParameterValue AudioEngine::getOutputValue(const InputHandle& handle, size_t id)
 }
 
 ParameterValue AudioEngine::getOutputValue(const OutputHandle& handle, size_t id) {
+  if(!handle) {    
+    return ParameterValue();
+  }
   Command command;
   command.type = Command::Type::GetAudioOutputOutputValue;
   command.handle = handle;
@@ -416,6 +470,9 @@ ParameterValue AudioEngine::getOutputValue(const OutputHandle& handle, size_t id
 }
 
 ParameterValue AudioEngine::getOutputValue(const EffectHandle& handle, size_t id) {
+  if(!handle) {    
+    return ParameterValue();
+  }
   Command command;
   command.type = Command::Type::GetEffectOutputValue;
   command.handle = handle;
