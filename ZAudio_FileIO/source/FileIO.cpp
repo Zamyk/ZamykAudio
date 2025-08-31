@@ -473,6 +473,7 @@ VorbisDecoder::VorbisDecoder(std::unique_ptr<FileInputStream> fileInput_p, bool&
 
   int error = 0;
   vorbis = stb_vorbis_open_memory(data.data(), data.size(), &error, nullptr);
+
   if(error != 0) {
     result = Result::error("stb error todo message");
     return;
@@ -501,7 +502,7 @@ VorbisDecoder::VorbisDecoder(std::unique_ptr<FileInputStream> fileInput_p, bool&
     }
 
     if(gotStart && gotEnd) {
-      loadLoops = true;      
+      loadLoops = true;
     }
     else {
       loadLoops = false;
@@ -523,7 +524,7 @@ VorbisDecoder::VorbisDecoder(std::unique_ptr<FileInputStream> fileInput_p, bool&
 
 VorbisDecoder::~VorbisDecoder() {
   if(vorbis) {
-    free(vorbis);
+    stb_vorbis_close(vorbis);
   }
 }
 
