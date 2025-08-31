@@ -1,3 +1,5 @@
+// stb_vorbis.c with changed static static uint32 crc_table[256]; to thread_local uint32 crc_table[256]; (thread sanitizer reported race condition). Still need to check if that is not false-positive before opening issue.
+
 // Ogg Vorbis audio decoder - v1.22 - public domain
 // http://nothings.org/stb_vorbis/
 //
@@ -65,11 +67,12 @@
 //
 // See end of file for full version history.
 
-
 //////////////////////////////////////////////////////////////////////////////
 //
 //  HEADER BEGINS HERE
 //
+
+#include <threads.h>
 
 #ifndef STB_VORBIS_INCLUDE_STB_VORBIS_H
 #define STB_VORBIS_INCLUDE_STB_VORBIS_H
@@ -988,7 +991,7 @@ static void setup_temp_free(vorb *f, void *p, int sz)
 
 #define CRC32_POLY    0x04c11db7   // from spec
 
-static uint32 crc_table[256];
+thread_local uint32 crc_table[256];
 static void crc32_init(void)
 {
    int i,j;
