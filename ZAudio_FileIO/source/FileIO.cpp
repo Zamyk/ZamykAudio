@@ -8,7 +8,7 @@
 #include <dr_wav.h>
 #include <ZAudio/FileIO.h>
 
-#include "stb_vorbis.c"
+#include "stb_vorbis.cpp"
 
 namespace ZAudio {
 
