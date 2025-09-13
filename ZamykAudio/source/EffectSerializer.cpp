@@ -81,7 +81,7 @@ ResultValue<std::unique_ptr<Effect>> EffectSerializer::load(TreeDatabaseReader r
   Result r = Result::success();
   r &= reader.getValue<std::string>("EffectID", id);  
 
-  int64_t version;
+  int64_t version = 0;
   r &= reader.getValue<int64_t>("Version", version);
   
   if(!r) {

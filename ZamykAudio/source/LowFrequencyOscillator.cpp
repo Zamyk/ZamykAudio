@@ -27,7 +27,7 @@ NormalizedValue LowFrequencyOscillator::get() {
   if(phase > 1.) {
     phase -= 1.;
   }
-  double v;
+  double v = 0.;
   if(shapeType == ShapeType::Saw) {
     v = tmp;
   }
