@@ -1,6 +1,5 @@
 add_library(ZAudio_FileIO STATIC
 source/FileIO.cpp
-source/stb_vorbis.c
 )
 
 option(ZAUDIO_USE_OWN_DR_LIBS "Library will use fetched dr_libs; if OFF, assumes dr_libs are already in the project" ON)
