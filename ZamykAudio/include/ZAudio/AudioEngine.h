@@ -23,7 +23,7 @@ class AudioEngineOutput; // forward
 template<typename T, typename ID>
 class THandleID {
 public:
-  THandleID() = default;  
+  THandleID() = default;
 
   bool operator == (const THandleID& oth) const {
     return ptr == oth.ptr && id == oth.id;
@@ -39,10 +39,10 @@ private:
   friend AudioEngineInput;
   friend AudioEngineOutput;
 
-  std::shared_ptr<T> ptr;  
+  std::shared_ptr<T> ptr;
   ID id;
 
-  THandleID(ID id_p, std::shared_ptr<T> ptr_p) :    
+  THandleID(ID id_p, std::shared_ptr<T> ptr_p) :
     ptr(ptr_p),
     id(id_p) {}
 
@@ -58,12 +58,12 @@ private:
 template<typename T>
 class THandle {
 public:
-  THandle() = default;  
+  THandle() = default;
 
   bool operator == (const THandle& oth) const {
     return ptr == oth.ptr;
   }
-  
+
   explicit operator bool() const {
     return ptr != nullptr;
   }
@@ -71,7 +71,7 @@ public:
 private:
   friend Mixer;
   friend AudioEngine;
-  std::shared_ptr<T> ptr;    
+  std::shared_ptr<T> ptr;
 
   THandle(std::shared_ptr<T> ptr_p) :
     ptr(ptr_p) {}
@@ -93,7 +93,7 @@ public:
     id(id_p) {}
 
   uint64_t get() const {
-    return id;  
+    return id;
   }
 
   bool operator == (TAudioEngineID oth) const {
@@ -183,8 +183,9 @@ public:
   bool errorOccured() const;
   bool isPlaying() const;
   FrameFormat getFormat() const;
+  int32_t getTotalPlaying() const;
 
-private:      
+private:
   std::unordered_map<AudioEngineInputID, AudioEngineInput>* inputs;
   FrameFormat format;
 
@@ -201,7 +202,7 @@ private:
   };
 
   std::vector<MixerInput> playing;
-  std::vector<TailEffect> tails;  
+  std::vector<TailEffect> tails;
 
   EffectHandle mixerEffect;
   bool error = false;
@@ -209,8 +210,8 @@ private:
 
 
 class AudioEngine {
-public:  
-  AudioEngine(Frequency sampleRate_p);
+public:
+  AudioEngine(Frequency sampleRate_p, int32_t simultaneousPlayingLimit_p = 20);
   ~AudioEngine();
 
   MixerHandle addMixer(FrameFormat format);
@@ -236,13 +237,13 @@ public:
 
   template<typename T, typename... Args>
   EffectHandle addEffect(Args&&... args) {
-    return addEffect(std::make_unique<T>(std::forward<Args>(args)...));    
+    return addEffect(std::make_unique<T>(std::forward<Args>(args)...));
   }
 
   template<typename T, typename... Args>
   InputHandle addInput(Args&&... args) {
     return addInput(std::make_unique<T>(std::forward<Args>(args)...));
-  }  
+  }
 
   template<typename T, typename... Args>
   OutputHandle addOutput(Args&&... args) {
@@ -250,7 +251,7 @@ public:
   }
 
 private:
-struct Command {  
+struct Command {
   enum struct Type {
     AddMixer,
     AddMixerOutput,
@@ -261,8 +262,8 @@ struct Command {
     AddInput,
     AddOutput,
     SetEffectParameter,
-    SetInputParameter, 
-    SetOutputParameter,       
+    SetInputParameter,
+    SetOutputParameter,
     RemoveMixerOutput,
     SetMultiEffectParameter,
     AskIsPlaying,
@@ -272,27 +273,28 @@ struct Command {
     AskHasEnded
   };
   size_t ind1 = 0;
-  size_t ind2 = 0;  
+  size_t ind2 = 0;
   std::variant<MixerHandle, InputHandle, OutputHandle, EffectHandle> handle;
   std::variant<MixerHandle, InputHandle, OutputHandle, EffectHandle, ParameterValue> value1;
-  std::variant<MixerHandle, InputHandle, OutputHandle, EffectHandle, ParameterValue> value2;    
+  std::variant<MixerHandle, InputHandle, OutputHandle, EffectHandle, ParameterValue> value2;
   Type type;
-};  
+};
   static constexpr uint32_t QueueSize = 256;
   static constexpr uint32_t OutQueueSize = 2;
   Tools::ReaderWriterQueue<Command> queue;
   Tools::ReaderWriterQueue<ParameterValue> outQueue;
-  
+
   std::vector<MixerHandle> mixers;
   std::vector<EffectHandle> effects;
 
-  std::unordered_map<AudioEngineInputID, AudioEngineInput> inputs;  
-  std::unordered_map<AudioEngineOutputID, AudioEngineOutput> outputs;  
+  std::unordered_map<AudioEngineInputID, AudioEngineInput> inputs;
+  std::unordered_map<AudioEngineOutputID, AudioEngineOutput> outputs;
   uint64_t nextID = 0;
 
   std::vector<std::pair<MixerHandle, AudioEngineOutputID>> mixersOutputs;
 
-  Frequency sampleRate;  
+  Frequency sampleRate;
+  int32_t simultaneousPlayingLimit = 0;
 
   std::atomic_bool run{true};
   std::atomic_bool ready{false};

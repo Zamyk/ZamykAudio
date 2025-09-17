@@ -228,13 +228,18 @@ FrameFormat Mixer::getFormat() const {
   return format;
 }
 
+int32_t Mixer::getTotalPlaying() const {
+  return playing.size() + tails.size();
+}
+
 
 // AudioEngine----------------------------------------------------------------------------------------------
 
-AudioEngine::AudioEngine(Frequency sampleRate_p) :
+AudioEngine::AudioEngine(Frequency sampleRate_p, int32_t simultaneousPlayingLimit_p) :
   queue(QueueSize),
   outQueue(OutQueueSize),
   sampleRate(sampleRate_p),
+  simultaneousPlayingLimit(simultaneousPlayingLimit_p),
   thread(&AudioEngine::engineThread, this)
 {
   ThreadTools::setHighPriority(thread);
@@ -435,7 +440,7 @@ bool AudioEngine::isPlaying(const InputHandle& handle) {
 }
 
 bool AudioEngine::hasEnded(const OutputHandle& handle) {
-  if(!handle) {    
+  if(!handle) {
     return true;
   }
   Command command;
@@ -446,7 +451,7 @@ bool AudioEngine::hasEnded(const OutputHandle& handle) {
 }
 
 ParameterValue AudioEngine::getOutputValue(const InputHandle& handle, size_t id) {
-  if(!handle) {    
+  if(!handle) {
     return ParameterValue();
   }
   Command command;
@@ -458,7 +463,7 @@ ParameterValue AudioEngine::getOutputValue(const InputHandle& handle, size_t id)
 }
 
 ParameterValue AudioEngine::getOutputValue(const OutputHandle& handle, size_t id) {
-  if(!handle) {    
+  if(!handle) {
     return ParameterValue();
   }
   Command command;
@@ -470,7 +475,7 @@ ParameterValue AudioEngine::getOutputValue(const OutputHandle& handle, size_t id
 }
 
 ParameterValue AudioEngine::getOutputValue(const EffectHandle& handle, size_t id) {
-  if(!handle) {    
+  if(!handle) {
     return ParameterValue();
   }
   Command command;
@@ -509,7 +514,17 @@ void AudioEngine::play(Command& command) {
   auto& mixer = *std::get<MixerHandle>(command.handle).ptr;
   auto& input = std::get<InputHandle>(command.value1);
   auto& effect = std::get<EffectHandle>(command.value2);
-  mixer.add(input.id, effect);
+
+  int32_t totalPlaying = 0;
+  for(auto& mixer : mixers) {
+    totalPlaying += mixer.get().getTotalPlaying();
+  }
+  if(totalPlaying < simultaneousPlayingLimit) {
+    if(!inputs.contains(input.id)) {
+      inputs.insert({input.id, input});
+    }
+    mixer.add(input.id, effect);
+  }
 }
 
 void AudioEngine::stop(Command& command) {
@@ -524,7 +539,6 @@ void AudioEngine::addEffect(Command& command) {
 
 void AudioEngine::addInput(Command& command) {
   AudioEngineInput input(std::get<InputHandle>(command.handle));
-  inputs.insert({std::get<InputHandle>(command.handle).id, input});
 }
 
 void AudioEngine::addOutput(Command& command) {
@@ -655,11 +669,6 @@ void AudioEngine::engineThread() {
     while(auto command = queue.tryPop()) {
       handleCommand(*command);
     }
-    //clean(mixers);
-    //clean(effects);
-    //clean(inputs);
-    //clean(outputs);
-    //clean(playbacks);
     std::fill(frame1.begin(), frame1.end(), 0.);
     std::fill(frame2.begin(), frame2.end(), 0.);
 
@@ -668,8 +677,8 @@ void AudioEngine::engineThread() {
     }
 
     for(auto it = inputs.begin(); it != inputs.end();) {
-      if(it->second.getUseCount() == 0 && it->second.isPlaying() == false) {
-        it = inputs.erase(it);        
+      if(it->second.getUseCount() == 0) {
+        it = inputs.erase(it);
       }
       else {
         ++it;
