@@ -136,6 +136,20 @@ void Mixer::stop(AudioEngineInputID input) {
 }
 
 void Mixer::get(std::span<sample_t> out) {
+  // Mixer is not currently playing anything.
+  if (playing.empty() && tails.empty()) {
+    if (timeRemaining == 0) {
+      std::fill(out.begin(), out.end(), 0.);
+      return;
+    }
+    else {
+      --timeRemaining;
+    }
+  }
+  else {
+    timeRemaining = mixerEffect.ptr->getTailTime();
+  }
+
   std::array<sample_t, Tools::MaxNumberOfChannels> frame1;
   std::array<sample_t, Tools::MaxNumberOfChannels> frame2;
   std::array<sample_t, Tools::MaxNumberOfChannels> frame3;

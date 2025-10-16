@@ -203,6 +203,7 @@ private:
 
   std::vector<MixerInput> playing;
   std::vector<TailEffect> tails;
+  uint32_t timeRemaining = 0;
 
   EffectHandle mixerEffect;
   bool error = false;
