@@ -34,16 +34,47 @@ public:
       error = true;
     }
 
+    const int32_t hardwareBufferBytes = sampleFrames * SDL_AUDIO_FRAMESIZE(spec);
+    const int32_t localBufferBytes = static_cast<int32_t>(buffer.size() * sizeof(float));
+    const int32_t threshold = hardwareBufferBytes + localBufferBytes;
+
     for(size_t i = 0; i < Tools::numberOfChannels(format); i++) {
       auto v = in[i];
       buffer[curr++] = v;
+          
       if(curr == static_cast<int32_t>(buffer.size())) {
         curr = 0;
-        while(SDL_GetAudioStreamQueued(stream) > static_cast<int32_t>(sampleFrames * (SDL_AUDIO_MASK_BITSIZE & spec.format) * spec.channels + buffer.size() * sizeof(float)) && !stopFlag->load()) {
+
+        const int32_t specFreq = spec.freq > 0 ? spec.freq : 44100;
+        const int32_t specChannels = spec.channels > 0 ? spec.channels : 2;
+
+        const std::chrono::duration<double> bufferDuration(
+          static_cast<double>(buffer.size()) / (specChannels * specFreq)
+        );
+              
+        const std::chrono::duration<double> timeout = std::max(
+          bufferDuration * 2.0,
+          std::chrono::duration<double>(0.02)
+        );
+
+        const auto waitStart = std::chrono::steady_clock::now();
+        bool timedOut = false;
+
+        while(SDL_GetAudioStreamQueued(stream) > threshold && !stopFlag->load()) {
+          const std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - waitStart;
+
+          if(elapsed >= timeout) {
+            timedOut = true;
+            break;
+          }
+
           std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-        if(!SDL_PutAudioStreamData(stream, buffer.data(), buffer.size() * sizeof(float))) {
-          error = true;
+
+        if(!timedOut) {
+          if(!SDL_PutAudioStreamData(stream, buffer.data(), buffer.size() * sizeof(float))) {
+            error = true;
+          }
         }
       }
     }
