@@ -49,7 +49,7 @@ public:
         const int32_t specChannels = spec.channels > 0 ? spec.channels : 2;
 
         const std::chrono::duration<double> bufferDuration(
-          static_cast<double>(buffer.size()) / (specChannels * specFreq)
+          static_cast<double>(sampleFrames) / (specChannels * specFreq)
         );
               
         const std::chrono::duration<double> timeout = std::max(
