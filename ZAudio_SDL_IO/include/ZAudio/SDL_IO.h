@@ -36,7 +36,7 @@ public:
 
     const int32_t hardwareBufferBytes = sampleFrames * SDL_AUDIO_FRAMESIZE(spec);
     const int32_t localBufferBytes = static_cast<int32_t>(buffer.size() * sizeof(float));
-    const int32_t threshold = hardwareBufferBytes + localBufferBytes;
+    const int32_t threshold = hardwareBufferBytes + localBufferBytes * 2;
 
     for(size_t i = 0; i < Tools::numberOfChannels(format); i++) {
       auto v = in[i];
