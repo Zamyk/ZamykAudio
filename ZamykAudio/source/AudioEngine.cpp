@@ -180,9 +180,10 @@ void Mixer::get(std::span<sample_t> out) {
         p.timeRemaining = p.effect.get().getTailTime();
       }
 
-      if(p.timeRemaining != 0) {
-        p.timeRemaining--;
+      if(p.timeRemaining == 0) {
+        continue;
       }
+      p.timeRemaining--;
     }
 
     // convert input format to effect input format and process
