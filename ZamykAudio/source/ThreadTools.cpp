@@ -1,51 +1,43 @@
 #include <ZAudio/ThreadTools.h>
 
+#if defined(_WIN32)
 
-//#define THREADS_POSIX
-
-#ifdef THREADS_POSIX
-
-#include <pthread.h>
-
-void ZAudio::ThreadTools::setHighPriority(std::thread& thread) {
-  pthread_t thId = thread.native_handle();
-  pthread_attr_t thAttr;
-  int policy = 0;
-  int maxPriority = 0;
-  pthread_attr_init(&thAttr);
-  pthread_attr_getschedpolicy(&thAttr, &policy);
-  maxPriority = sched_get_priority_max(policy);
-  pthread_setschedprio(thId, maxPriority);
-  pthread_attr_destroy(&thAttr);
-}
-
-#elif THREADS_WINDOWS
-
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 
-void ZAudio::ThreadTools::setHighPriority(std::thread& thread) {
-  DWORD dwPriorityClass = 0;
-  int nPriorityNumber = 0;
-  tasks::getWinPriorityParameters(setPriority, dwPriorityClass, nPriorityNumber);
-  int result = SetPriorityClass(
-          reinterpret_cast<HANDLE>(mainThread.native_handle()),
-          dwPriorityClass);
-  if(result != 0) {
-        std::cerr << "Setting priority class failed with " << GetLastError() << std::endl;
-  }
-  result = SetThreadPriority(
-          reinterpret_cast<HANDLE>(mainThread.native_handle()),
-          nPriorityNumber);
-  if(result != 0) {
-        std::cerr << "Setting priority number failed with " << GetLastError() << std::endl;
-  }
+bool ZAudio::ThreadTools::setCurrentThreadHighPriority() {
+  return SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST) != 0;
+}
+
+#elif defined(__APPLE__)
+
+#include <pthread.h>
+#include <pthread/qos.h>
+
+bool ZAudio::ThreadTools::setCurrentThreadHighPriority() {
+  return pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0) == 0;
+}
+
+#elif defined(__ANDROID__) || defined(__linux__)
+
+#include <sys/resource.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+
+bool ZAudio::ThreadTools::setCurrentThreadHighPriority() {
+  const pid_t tid = static_cast<pid_t>(syscall(SYS_gettid));
+  return setpriority(PRIO_PROCESS, static_cast<id_t>(tid), -16) == 0;
 }
 
 #else
 
-void ZAudio::ThreadTools::setHighPriority(std::thread& thread) {
-
+bool ZAudio::ThreadTools::setCurrentThreadHighPriority() {
+  return false;
 }
 
 #endif
-

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 #include <SDL3/SDL.h>
 
 #include <ZAudio/AudioInput.h>
@@ -18,7 +20,11 @@ public:
     buffer(128),
     stream(stream_p),
     stopFlag(stopFlag_p),
-    finishedFlag(finishedFlag_p) {}    
+    finishedFlag(finishedFlag_p) {
+    const double chunkFrames = static_cast<double>(buffer.size() / Tools::numberOfChannels(format));
+    chunkDuration = std::chrono::duration<double>(chunkFrames / inSampleRate.Hz());
+    refreshDeviceFormat();
+  }
 
   void send(std::span<const sample_t> in) override {
     finishedFlag->store(false);
@@ -28,42 +34,28 @@ public:
       return;
     }
 
-    SDL_AudioSpec spec;
-    int sampleFrames = 0;
-    if(!SDL_GetAudioDeviceFormat(SDL_GetAudioStreamDevice(stream), &spec, &sampleFrames)) {
-      error = true;
-    }
-
-    const int32_t hardwareBufferBytes = sampleFrames * SDL_AUDIO_FRAMESIZE(spec);
-    const int32_t localBufferBytes = static_cast<int32_t>(buffer.size() * sizeof(float));
-    const int32_t threshold = hardwareBufferBytes + localBufferBytes * 2;
-
     for(size_t i = 0; i < Tools::numberOfChannels(format); i++) {
       auto v = in[i];
       buffer[curr++] = v;
-          
+
       if(curr == static_cast<int32_t>(buffer.size())) {
         curr = 0;
 
-        const int32_t specFreq = spec.freq > 0 ? spec.freq : 44100;
-        const int32_t specChannels = spec.channels > 0 ? spec.channels : 2;
-
-        const std::chrono::duration<double> bufferDuration(
-          static_cast<double>(sampleFrames) / (specChannels * specFreq)
-        );
-              
-        const std::chrono::duration<double> timeout = std::max(
-          bufferDuration * 2.0,
-          std::chrono::duration<double>(0.02)
-        );
-
         const auto waitStart = std::chrono::steady_clock::now();
+
+        if(waitStart - lastDeviceFormatRefresh >= DeviceFormatRefreshInterval) {
+          refreshDeviceFormat();
+        }
+
+        // once the device stopped taking data, wait only about one chunk's duration,
+        // so the engine keeps running instead of blocking for a full timeout per chunk
+        const std::chrono::duration<double> waitLimit = stalled ? chunkDuration : timeout;
         bool timedOut = false;
 
         while(SDL_GetAudioStreamQueued(stream) > threshold && !stopFlag->load()) {
           const std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() - waitStart;
 
-          if(elapsed >= timeout) {
+          if(elapsed >= waitLimit) {
             timedOut = true;
             break;
           }
@@ -71,7 +63,11 @@ public:
           std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
-        if(!timedOut) {
+        if(timedOut) {
+          stalled = true;
+        }
+        else {
+          stalled = false;
           if(!SDL_PutAudioStreamData(stream, buffer.data(), buffer.size() * sizeof(float))) {
             error = true;
           }
@@ -107,11 +103,51 @@ public:
   SDL_Output& operator = (SDL_Output&& oth) = default;
 
 private:
+  // reads device format and recomputes threshold and timeout
+  void refreshDeviceFormat() {
+    lastDeviceFormatRefresh = std::chrono::steady_clock::now();
+
+    SDL_AudioSpec spec{};
+    int sampleFrames = 0;
+    if(!SDL_GetAudioDeviceFormat(SDL_GetAudioStreamDevice(stream), &spec, &sampleFrames)) {
+      error = true;
+    }
+
+    const int32_t specFreq = spec.freq > 0 ? spec.freq : 44100;
+
+    const int32_t inFrameBytes = static_cast<int32_t>(Tools::numberOfChannels(format) * sizeof(float));
+    const int32_t hardwareBufferInFrames = static_cast<int32_t>(std::ceil(sampleFrames * inSampleRate.Hz() / specFreq));
+    const int32_t hardwareBufferBytes = hardwareBufferInFrames * inFrameBytes;
+    const int32_t localBufferBytes = static_cast<int32_t>(buffer.size() * sizeof(float));
+
+    threshold = hardwareBufferBytes * 2 + localBufferBytes * 2;
+
+    const std::chrono::duration<double> bufferDuration(
+      static_cast<double>(sampleFrames) / specFreq
+    );
+
+    timeout = std::max(
+      bufferDuration * 2.0,
+      std::chrono::duration<double>(0.02)
+    );
+  }
+
+  static constexpr std::chrono::milliseconds DeviceFormatRefreshInterval{250};
+
   FrameFormat format;
   Frequency inSampleRate;
 
   int32_t curr = 0;
   std::vector<float> buffer;
+
+  // cached from device format, updated by refreshDeviceFormat
+  int32_t threshold = 0;
+  std::chrono::duration<double> timeout{0.02};
+  std::chrono::steady_clock::time_point lastDeviceFormatRefresh{};
+
+  // set after a wait timed out (device not taking data), cleared on the first successful put
+  bool stalled = false;
+  std::chrono::duration<double> chunkDuration{0.0};
 
   bool error = false;
 
@@ -137,7 +173,7 @@ public:
       finishedFlag->store(true);
       return;
     }
-    
+
     for(size_t i = 0; i < Tools::numberOfChannels(format); i++) {
 
       if(curr >= n) {
@@ -159,7 +195,7 @@ public:
 
           std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-      }      
+      }
       out[i] = buffer[curr++];
     }
 

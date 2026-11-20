@@ -6,8 +6,7 @@
 namespace ZAudio::ThreadTools {
 
 
-void setHighPriority(std::thread& thread);
+bool setCurrentThreadHighPriority();
 
 
 } // namespace ZAudio::ThreadTools
-

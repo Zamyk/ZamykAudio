@@ -120,7 +120,7 @@ void Mixer::add(AudioEngineInputID input, EffectHandle effect_p) {
 }
 
 void Mixer::stop(AudioEngineInputID input) {
-  for(size_t i = 0; i < playing.size(); i++) {
+  for(size_t i = 0; i < playing.size();) {
     if(playing[i].input == input) {
       std::swap(playing[i], playing.back());
       TailEffect tail;
@@ -130,7 +130,10 @@ void Mixer::stop(AudioEngineInputID input) {
         tails.push_back(tail);
       }
       playing.pop_back();
-      (*inputs)[input].decrementUseCount();
+      (*inputs)[input].decrementUseCount();      
+    }
+    else {
+      i++;
     }
   }
 }
@@ -257,7 +260,6 @@ AudioEngine::AudioEngine(Frequency sampleRate_p, int32_t simultaneousPlayingLimi
   simultaneousPlayingLimit(simultaneousPlayingLimit_p),
   thread(&AudioEngine::engineThread, this)
 {
-  ThreadTools::setHighPriority(thread);
   ready = true;
 }
 
@@ -674,6 +676,7 @@ void AudioEngine::handleCommand(Command& command) {
 
 
 void AudioEngine::engineThread() {
+  ThreadTools::setCurrentThreadHighPriority();
   while(!ready) {
     std::this_thread::yield();
   }

@@ -2,6 +2,7 @@
 #include "catch/catch.hpp"
 
 #include "CircularBufferTests.h"
+#include "AudioEngineTests.h"
 #include "CommonTypesTests.h"
 #include "EffectsIOTests.h"
 #include "MathTests.h"
