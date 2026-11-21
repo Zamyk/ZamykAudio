@@ -120,7 +120,9 @@ private:
     const int32_t hardwareBufferBytes = hardwareBufferInFrames * inFrameBytes;
     const int32_t localBufferBytes = static_cast<int32_t>(buffer.size() * sizeof(float));
 
-    threshold = hardwareBufferBytes * 2 + localBufferBytes * 2;
+    const int32_t minReserveBytes = static_cast<int32_t>(std::ceil(MinReserve.count() * inSampleRate.Hz())) * inFrameBytes;
+
+    threshold = std::max(hardwareBufferBytes * 2 + localBufferBytes * 2, minReserveBytes);
 
     const std::chrono::duration<double> bufferDuration(
       static_cast<double>(sampleFrames) / specFreq
@@ -133,6 +135,7 @@ private:
   }
 
   static constexpr std::chrono::milliseconds DeviceFormatRefreshInterval{250};
+  static constexpr std::chrono::duration<double> MinReserve{0.04};
 
   FrameFormat format;
   Frequency inSampleRate;

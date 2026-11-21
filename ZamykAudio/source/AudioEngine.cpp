@@ -130,7 +130,7 @@ void Mixer::stop(AudioEngineInputID input) {
         tails.push_back(tail);
       }
       playing.pop_back();
-      (*inputs)[input].decrementUseCount();      
+      (*inputs)[input].decrementUseCount();
     }
     else {
       i++;
@@ -342,7 +342,8 @@ void AudioEngine::play(const MixerHandle& mixer, const InputHandle& input) {
   command.type = Command::Type::Play;
   command.handle = mixer;
   command.value1 = input;
-  command.value2 = EffectHandle(std::make_shared<BypassEffect>(input.get().getFormat(), mixer.get().getFormat()));
+  const FrameFormat inputFormat = input.get().getFormat();
+  command.value2 = EffectHandle(std::make_shared<BypassEffect>(inputFormat, inputFormat));
   queue.waitAndPush(command);
 }
 
@@ -362,12 +363,7 @@ EffectHandle AudioEngine::addEffect(std::unique_ptr<Effect> effect) {
     return EffectHandle();
   }
   effect->setSampleRate(sampleRate);
-  EffectHandle handle(std::move(effect));
-  Command command;
-  command.type = Command::Type::AddEffect;
-  command.handle = handle;
-  queue.waitAndPush(command);
-  return handle;
+  return EffectHandle(std::move(effect));
 }
 
 void AudioEngine::setEffectParameter(const EffectHandle& handle, size_t parameterID, const ParameterValue& v) {
@@ -400,12 +396,7 @@ InputHandle AudioEngine::addInput(std::unique_ptr<AudioInput> input) {
     return InputHandle();
   }
   input->setSampleRate(sampleRate);
-  InputHandle handle(getNextID<AudioEngineInputID>(), std::move(input));
-  Command command;
-  command.type = Command::Type::AddInput;
-  command.handle = handle;
-  queue.waitAndPush(command);
-  return handle;
+  return InputHandle(getNextID<AudioEngineInputID>(), std::move(input));
 }
 
 void AudioEngine::setInputParameter(const InputHandle& handle, size_t parameterID, const ParameterValue& v ) {
@@ -550,14 +541,6 @@ void AudioEngine::stop(Command& command) {
   mixer.stop(input.id);
 }
 
-void AudioEngine::addEffect(Command& command) {
-  effects.push_back(std::get<EffectHandle>(command.handle));
-}
-
-void AudioEngine::addInput(Command& command) {
-  AudioEngineInput input(std::get<InputHandle>(command.handle));
-}
-
 void AudioEngine::addOutput(Command& command) {
   AudioEngineOutput output(std::get<OutputHandle>(command.handle));
   outputs.insert({std::get<OutputHandle>(command.handle).id, output});
@@ -601,14 +584,6 @@ void AudioEngine::askHasEnded(Command& command) {
 
 void AudioEngine::handleCommand(Command& command) {
   switch(command.type) {
-    case Command::Type::AddEffect:
-      addEffect(command);
-      break;
-
-    case Command::Type::AddInput:
-      addInput(command);
-      break;
-
     case Command::Type::AddMixer:
       addMixer(command);
       break;
@@ -662,11 +637,15 @@ void AudioEngine::handleCommand(Command& command) {
       break;
 
     case Command::Type::GetAudioOutputOutputValue:
-      getAudioInputOutputValue(command);
+      getAudioOutputOutputValue(command);
       break;
 
     case Command::Type::GetEffectOutputValue:
-      getAudioInputOutputValue(command);
+      getEffectOutputValue(command);
+      break;
+
+    case Command::Type::AskHasEnded:
+      askHasEnded(command);
       break;
 
     default:

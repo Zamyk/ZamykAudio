@@ -40,7 +40,7 @@ std::unique_ptr<SDL_Output> SDL_IO::createDefaultOutput(FrameFormat format) {
 
 std::unique_ptr<SDL_Input> SDL_IO::createDefaultInput(FrameFormat format) {
   SDL_AudioSpec spec = { SDL_AUDIO_F32, static_cast<int32_t>(ZAudio::Tools::numberOfChannels(format)), static_cast<int32_t>(sampleRate.Hz()) };
-  SDL_AudioStream* inputStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, nullptr, nullptr);
+  SDL_AudioStream* inputStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_RECORDING, &spec, nullptr, nullptr);
 
   if(!inputStream) {
     error = SDL_GetError();

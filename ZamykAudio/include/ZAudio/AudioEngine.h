@@ -259,8 +259,6 @@ struct Command {
     SetMixerEffect,
     Play,
     Stop,
-    AddEffect,
-    AddInput,
     AddOutput,
     SetEffectParameter,
     SetInputParameter,
@@ -286,7 +284,6 @@ struct Command {
   Tools::ReaderWriterQueue<ParameterValue> outQueue;
 
   std::vector<MixerHandle> mixers;
-  std::vector<EffectHandle> effects;
 
   std::unordered_map<AudioEngineInputID, AudioEngineInput> inputs;
   std::unordered_map<AudioEngineOutputID, AudioEngineOutput> outputs;
@@ -308,8 +305,6 @@ struct Command {
   void setMixerEffect(Command& command);
   void play(Command& command);
   void stop(Command& command);
-  void addEffect(Command& command);
-  void addInput(Command& command);
   void addOutput(Command& command);
   void setEffectParameter(Command& command);
   void setInputParameter(Command& command);
